@@ -12,7 +12,12 @@ def two_2(column_name, column_value):
                    "inner join disease on disease.ds_id = clinical_fact.ds_id "
                    "where disease." + column_name + " = '" + column_value + "'")
 
-    data = cursor.fetchall()
+    result = cursor.fetchall()
+
+    data = []
+
+    for row in result:
+        data.append(row[0])
 
     return data
 
