@@ -1,7 +1,7 @@
 import pymysql as mysql
 
 
-def two_2(ds_name, mu_id, cl_id):
+def two_3(ds_name, mu_id, cl_id):
     conn = mysql.connect(user='root', password='09071992', host='localhost', database='cse601-project1')
 
     cursor = conn.cursor()
@@ -16,9 +16,13 @@ def two_2(ds_name, mu_id, cl_id):
                                                                                     "AND gf.cl_id = " + str(
         cl_id) + " ")
 
-    data = cursor.fetchall()
+    results = cursor.fetchall()
+    data = []
+
+    for row in results:
+        data.append(row[0])
 
     return data
 
 
-two_2('ALL', 1, 2)
+two_3('ALL', 1, 2)

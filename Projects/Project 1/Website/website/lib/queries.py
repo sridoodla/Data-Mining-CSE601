@@ -1,10 +1,6 @@
 import pymysql as mysql
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, stats
 
-
-def three_1(disease_name):
-   import pymysql as mysql
-from scipy.stats import ttest_ind
 
 def three_1(disease_name):
     conn = mysql.connect(user='root', password='Seagate47!', host='localhost', database='cse601-project1')
@@ -72,21 +68,68 @@ def three_1(disease_name):
     print(len(if_gene))
 
 
-
 def three_2():
     return True
 
 
-def two_1():
-    return True
+def two_1(column_name, column_value):
+    conn = mysql.connect(user='root', password='09071992', host='localhost', database='cse601-project1')
+
+    cursor = conn.cursor()
+
+    cursor.execute("select count(DISTINCT p_id) "
+                   "from clinical_fact "
+                   "join disease on clinical_fact.ds_id = disease.ds_id "
+                   "where disease." + column_name + " = '" + column_value + "'")
+
+    data = cursor.fetchall()
+
+    return data[0][0]
 
 
-def two_2():
-    return True
+def two_2(column_name, column_value):
+    conn = mysql.connect(user='root', password='09071992', host='localhost', database='cse601-project1')
+
+    cursor = conn.cursor()
+
+    cursor.execute("select distinct drug.type "
+                   "from drug "
+                   "INNER JOIN clinical_fact ON drug.dr_id = clinical_fact.dr_id "
+                   "inner join disease on disease.ds_id = clinical_fact.ds_id "
+                   "where disease." + column_name + " = '" + column_value + "'")
+
+    result = cursor.fetchall()
+
+    data = []
+
+    for row in result:
+        data.append(row[0])
+
+    return data
 
 
-def two_3():
-    return True
+def two_3(ds_name, mu_id, cl_id):
+    conn = mysql.connect(user='root', password='09071992', host='localhost', database='cse601-project1')
+
+    cursor = conn.cursor()
+
+    cursor.execute("select distinct mf.exp from microarray_fact mf "
+                   "inner join clinical_fact cf on mf.s_id = cf.s_id "
+                   "inner join disease ds on cf.ds_id = ds.ds_id "
+                   "inner join probe on probe.pb_id = mf.pb_id "
+                   "inner join gene_fact gf on gf.UID = probe.UID "
+                   "where ds.name = '" + ds_name + "' "
+                                                   "AND mf.mu_id = " + str(mu_id) + " "
+                                                                                    "AND gf.cl_id = " + str(
+        cl_id) + " ")
+
+    results = cursor.fetchall()
+    data = []
+
+    for row in results:
+        data.append(row[0])
+
+    return data
 
 
 def two_4(go_id, disease_name):
@@ -130,82 +173,70 @@ def two_4(go_id, disease_name):
     return x
 
 
-def two_5(go_id,diseases):
+def two_5(go_id, diseases):
     conn = mysql.connect(user='root', password='09071992', host='localhost', database='cse601-project1')
-
-
-    disease_lists = [[]] * len(diseases)
-
-
-
 
     cursor = conn.cursor()
 
-    cursor.execute(
-        "select distinct  pf.pb_id,mf.exp "
-        "from microarray_fact mf "
-        "inner join probe pf on pf.pb_id = mf.pb_id "
-        "inner join gene_fact gf on pf.UID = gf.UID "
-        "inner join clinical_fact cf on cf.s_id = mf.s_id "
-        "inner join disease d on d.ds_id = cf.ds_id "
-        "where gf.go_id = '7154' "
-        "and d.name = 'ALL' "
-        "union "
-        "select distinct  mf.exp,d.name "
-        "from microarray_fact mf "
-        "inner join probe pf on pf.pb_id = mf.pb_id "
-        "inner join gene_fact gf on pf.UID = gf.UID "
-        "inner join clinical_fact cf on cf.s_id = mf.s_id "
-        "inner join disease d on d.ds_id = cf.ds_id "
-        "where gf.go_id = '7154' and d.name = 'AML' "
-        "union "
-        "select distinct  mf.exp,d.name "
-        "from microarray_fact mf "
-        "inner join probe pf on pf.pb_id = mf.pb_id "
-        "inner join gene_fact gf on pf.UID = gf.UID "
-        "inner join clinical_fact cf on cf.s_id = mf.s_id "
-        "inner join disease d on d.ds_id = cf.ds_id "
-        "where gf.go_id = '7154' and d.name = 'colon tumor' "
-        "union "
-        "select distinct  mf.exp,d.name "
-        "from microarray_fact mf "
-        "inner join probe pf on pf.pb_id = mf.pb_id "
-        "inner join gene_fact gf on pf.UID = gf.UID "
-        "inner join clinical_fact cf on cf.s_id = mf.s_id "
-        "inner join disease d on d.ds_id = cf.ds_id "
-        "where gf.go_id = '7154' and d.name = 'breast tumor'")
+    cursor.execute("select distinct  mf.exp,d.name "
+                   "from microarray_fact mf "
+                   "inner join probe pf on pf.pb_id = mf.pb_id "
+                   "inner join gene_fact gf on pf.UID = gf.UID "
+                   "inner join clinical_fact cf on cf.s_id = mf.s_id "
+                   "inner join disease d on d.ds_id = cf.ds_id "
+                   "where gf.go_id = " + str(go_id) + " "
+                                                      "and d.name = '" + diseases[0] + "' "
+                                                                                       "union "
+                                                                                       "select distinct  mf.exp,d.name "
+                                                                                       "from microarray_fact mf "
+                                                                                       "inner join probe pf on pf.pb_id = mf.pb_id "
+                                                                                       "inner join gene_fact gf on pf.UID = gf.UID "
+                                                                                       "inner join clinical_fact cf on cf.s_id = mf.s_id "
+                                                                                       "inner join disease d on d.ds_id = cf.ds_id "
+                                                                                       "where gf.go_id = " + str(
+        go_id) + " and d.name = '" + diseases[1] + "' "
+                                                   "union "
+                                                   "select distinct  mf.exp,d.name "
+                                                   "from microarray_fact mf "
+                                                   "inner join probe pf on pf.pb_id = mf.pb_id "
+                                                   "inner join gene_fact gf on pf.UID = gf.UID "
+                                                   "inner join clinical_fact cf on cf.s_id = mf.s_id "
+                                                   "inner join disease d on d.ds_id = cf.ds_id "
+                                                   "where gf.go_id = " + str(go_id) + " and d.name = '" + diseases[
+                       2] + "' "
+                            "union "
+                            "select distinct  mf.exp,d.name "
+                            "from microarray_fact mf "
+                            "inner join probe pf on pf.pb_id = mf.pb_id "
+                            "inner join gene_fact gf on pf.UID = gf.UID "
+                            "inner join clinical_fact cf on cf.s_id = mf.s_id "
+                            "inner join disease d on d.ds_id = cf.ds_id "
+                            "where gf.go_id = " + str(go_id) + " and d.name = '" + diseases[3] + "'")
 
     data = cursor.fetchall()
-    all = []
-    colon_tumor = []
-    aml = []
-    breast_tumor = []
+
+    disease_1 = []
+    disease_2 = []
+    disease_3 = []
+    disease_4 = []
 
     for row in data:
 
-        if (row[1] == 'ALL'):
-            all.append(row[0])
+        if row[1] == diseases[0]:
+            disease_1.append(row[0])
 
-        elif (row[1] == 'AML'):
-            aml.append(row[0])
+        elif row[1] == diseases[1]:
+            disease_3.append(row[0])
 
-        elif (row[1] == 'Colon tumor'):
-            colon_tumor.append(row[0])
+        elif row[1] == diseases[2]:
+            disease_2.append(row[0])
 
-        elif (row[1] == 'Breast tumor'):
-            breast_tumor.append(row[0])
+        elif row[1] == diseases[3]:
+            disease_4.append(row[0])
 
-    size = all.__len__() + aml.__len__() + colon_tumor.__len__() + breast_tumor.__len__()
-    print(size)
+    x = stats.f_oneway(disease_1, disease_3, disease_2, disease_4)
 
-    print("printing the disease patients")
-    print(all)
-    print(aml)
-    print(colon_tumor)
-    print(breast_tumor)
-
-    x = stats.f_oneway(all, aml, colon_tumor, breast_tumor)
-    print(x)
+    return x
 
 
 def two_6():
