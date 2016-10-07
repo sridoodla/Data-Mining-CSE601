@@ -10,14 +10,15 @@ import numpy as np
 conn = mysql.connector.connect(user='root',password = '----',host='localhost',database='cse601-project1')
 
 
-mycursor = conn.cursor()
 
-mycursor.execute("select distinct  mf.exp,d.name from microarray_fact mf inner join probe pf on pf.pb_id = mf.pb_id inner join gene_fact gf on pf.UID = gf.UID inner join clinical_fact cf on cf.s_id = mf.s_id inner join disease d on d.ds_id = cf.ds_id where gf.go_id = '7154' and d.name = 'ALL' union select distinct  mf.exp,d.name from microarray_fact mf inner join probe pf on pf.pb_id = mf.pb_id inner join gene_fact gf on pf.UID = gf.UID inner join clinical_fact cf on cf.s_id = mf.s_id inner join disease d on d.ds_id = cf.ds_id where gf.go_id = '7154' and d.name = 'AML' union select distinct  mf.exp,d.name from microarray_fact mf inner join probe pf on pf.pb_id = mf.pb_id inner join gene_fact gf on pf.UID = gf.UID inner join clinical_fact cf on cf.s_id = mf.s_id inner join disease d on d.ds_id = cf.ds_id where gf.go_id = '7154' and d.name = 'colon tumor' union select distinct  mf.exp,d.name from microarray_fact mf inner join probe pf on pf.pb_id = mf.pb_id inner join gene_fact gf on pf.UID = gf.UID inner join clinical_fact cf on cf.s_id = mf.s_id inner join disease d on d.ds_id = cf.ds_id where gf.go_id = '7154' and d.name = 'breast tumor'")
+cursor = conn.cursor()
+
+cursor.execute("select distinct  mf.exp,d.name from microarray_fact mf inner join probe pf on pf.pb_id = mf.pb_id inner join gene_fact gf on pf.UID = gf.UID inner join clinical_fact cf on cf.s_id = mf.s_id inner join disease d on d.ds_id = cf.ds_id where gf.go_id = '7154' and d.name = 'ALL' union select distinct  mf.exp,d.name from microarray_fact mf inner join probe pf on pf.pb_id = mf.pb_id inner join gene_fact gf on pf.UID = gf.UID inner join clinical_fact cf on cf.s_id = mf.s_id inner join disease d on d.ds_id = cf.ds_id where gf.go_id = '7154' and d.name = 'AML' union select distinct  mf.exp,d.name from microarray_fact mf inner join probe pf on pf.pb_id = mf.pb_id inner join gene_fact gf on pf.UID = gf.UID inner join clinical_fact cf on cf.s_id = mf.s_id inner join disease d on d.ds_id = cf.ds_id where gf.go_id = '7154' and d.name = 'colon tumor' union select distinct  mf.exp,d.name from microarray_fact mf inner join probe pf on pf.pb_id = mf.pb_id inner join gene_fact gf on pf.UID = gf.UID inner join clinical_fact cf on cf.s_id = mf.s_id inner join disease d on d.ds_id = cf.ds_id where gf.go_id = '7154' and d.name = 'breast tumor'")
 
 #mycursor.execute("select  distinct mf.pb_id, mf.exp,gf.go_id,d.name from microarray_fact mf right join probe pf on pf.pb_id = mf.pb_id right join gene_fact gf on pf.UID = gf.UID right join clinical_fact cf on cf.s_id = mf.s_id right join disease d on d.ds_id = cf.ds_id where gf.go_id = '12502' and d.name='ALL'")
 #mycursor2.execute("select  distinct mf.pb_id, mf.exp,gf.go_id,d.name from microarray_fact mf right join probe pf on pf.pb_id = mf.pb_id right join gene_fact gf on pf.UID = gf.UID right join clinical_fact cf on cf.s_id = mf.s_id right join disease d on d.ds_id = cf.ds_id where gf.go_id = '12502' and d.name!='ALL'")
 
-data = mycursor.fetchall()
+data = cursor.fetchall()
 print("printing data from sql")
 print(data)
 
