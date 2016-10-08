@@ -10,21 +10,24 @@ def two_4(go_id, disease_name):
     conn_data2 = conn2.cursor()
 
     conn_data1.execute(
-        "select distinct mf.pb_id, mf.exp,gf.go_id,d.name "
+        "select distinct mf.pb_id, mf.exp,gf.go_id,d.name,p.p_id "
         "from microarray_fact mf "
         "inner join probe pf on pf.pb_id = mf.pb_id "
         "inner join gene_fact gf on pf.UID = gf.UID "
         "inner join clinical_fact cf on cf.s_id = mf.s_id "
         "inner join disease d on d.ds_id = cf.ds_id "
-        "where gf.go_id = '" + go_id + "' and d.name='" + disease_name + "'")
+        "inner join patient p on p.p_id = cf.p_id "
+        "where gf.go_id = " + str(go_id) + " and d.name='" + disease_name + "'")
     conn_data2.execute(
-        "select  distinct mf.pb_id, mf.exp,gf.go_id,d.name "
+        "select  distinct mf.pb_id, mf.exp,gf.go_id,d.name,p.p_id "
         "from microarray_fact mf "
         "inner join probe pf on pf.pb_id = mf.pb_id "
         "inner join gene_fact gf on pf.UID = gf.UID "
         "inner join clinical_fact cf on cf.s_id = mf.s_id "
         "inner join disease d on d.ds_id = cf.ds_id "
-        "where gf.go_id = '" + go_id + "' and d.name!='" + disease_name + "'")
+        "inner join patient p on p.p_id = cf.p_id "
+
+        "where gf.go_id = " + str(go_id) + " and d.name!='" + disease_name + "'")
 
     data1 = conn_data1.fetchall()
     data2 = conn_data2.fetchall()
@@ -40,4 +43,6 @@ def two_4(go_id, disease_name):
 
     x = ttest_ind(group_with_disease, group_without_disease, equal_var=True)
 
-    return x
+    print(x)
+
+two_4(12502,'ALL')

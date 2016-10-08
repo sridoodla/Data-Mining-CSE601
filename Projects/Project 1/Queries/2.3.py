@@ -22,7 +22,8 @@ def two_3(ds_name, mu_id, cl_id):
     for row in results:
         data.append(row[0])
 
+    print(data)
     return data
 
 
-two_3('ALL', 1, 2)
+two_3('aml', '1', '2')

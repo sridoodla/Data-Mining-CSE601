@@ -4,14 +4,788 @@
     <meta charset="UTF-8">
     <title>DM App</title>
 
-    <link rel="stylesheet" href="http://bootswatch.com/flatly/bootstrap.min.css">
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="http://bootswatch.com/flatly/bootstrap.css">
+    <style>
+        .tab-pane {
+            margin-top: 2em;
+            margin-left: 0.5em;
+        }
+
+        .table td {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 
-<a href="#" onclick="hello()" class="btn btn-primary">Primary</a>
+{#Navbar#}
+<nav class="navbar navbar-default">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="{% url 'index' %}">CSE 601 - Data Mining</a>
+        </div>
+    </div><!-- /.container-fluid -->
+</nav>
+
+
+<div style="margin-left: 5%; margin-right: 5%">
+    <div class="page-header">
+        <h1>Project 1</h1>
+    </div>
+
+    <div>
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" {% if query == 0 %} class="active" {% endif %}>
+                <a href="#information" aria-controls="information" role="tab" data-toggle="tab">Information</a>
+            </li>
+            <li role="presentation" {% if query == 1 %} class="active" {% endif %}>
+                <a href="#query1" aria-controls="query1" role="tab" data-toggle="tab">II - Query 1</a>
+            </li>
+            <li role="presentation" {% if query == 2 %} class="active" {% endif %}>
+                <a href="#query2" aria-controls="query2" role="tab" data-toggle="tab">II - Query 2</a>
+            </li>
+            <li role="presentation" {% if query == 3 %} class="active" {% endif %}>
+                <a href="#query3" aria-controls="query3" role="tab" data-toggle="tab">II - Query 3</a>
+            </li>
+            <li role="presentation" {% if query == 4 %} class="active" {% endif %}>
+                <a href="#query4" aria-controls="query4" role="tab" data-toggle="tab">II - Query 4</a>
+            </li>
+            <li role="presentation" {% if query == 5 %} class="active" {% endif %}>
+                <a href="#query5" aria-controls="query5" role="tab" data-toggle="tab">II - Query 5</a>
+            </li>
+            <li role="presentation" {% if query == 6 %} class="active" {% endif %}>
+                <a href="#query6" aria-controls="query6" role="tab" data-toggle="tab">II - Query 6</a>
+            </li>
+            <li role="presentation" {% if query == 7 %} class="active" {% endif %}>
+                <a href="#query7" aria-controls="query7" role="tab" data-toggle="tab">III - Query 1</a>
+            </li>
+            <li role="presentation" {% if query == 8 %} class="active" {% endif %}>
+                <a href="#query8" aria-controls="query8" role="tab" data-toggle="tab">III - Query 2</a>
+            </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane {% if query == 0 %} active{% endif %}" id="information">
+
+
+                <h4>Built by :</h4>
+                <div class="well row" style="margin-left: 1em">
+                    <div class="col-xs-2">
+                        <p>
+                            <a href="https://github.com/junDrone">Arjun Sundaresh</a>
+                        </p>
+                        <p>
+                            <a href="https://github.com/sridoodla">Sridhar Vadlamani</a>
+                        </p>
+                        <p>
+                            <a href="https://www.linkedin.com/in/maddurisrikanth">Srikanth Madduri</a>
+                        </p>
+                    </div>
+                    <div class="col-xs-2">
+                        <p>
+                            50168045
+                        </p>
+                        <p>
+                            50168092
+                        </p>
+                        <p>
+                            50134851
+                        </p>
+                    </div>
+
+                </div>
+                <br>
+                <h4>Made with <img src="https://abs.twimg.com/emoji/v1/72x72/2764.png" alt="" style="max-height: 1.1em">
+                    using :</h4>
+
+                <div class="well row" style="margin-left: 1em">
+                    <div class="col-xs-4">
+                        <p><a href="https://www.mysql.com/">MySQL</a></p>
+                        <p><a href="https://www.python.org/">Python</a></p>
+                        <p><a href="https://www.djangoproject.com/">Django</a></p>
+                    </div>
+
+                </div>
+                <br>
+
+
+                <h3>Libraries Used :</h3>
+                <div class="well row" style="margin-left: 1em">
+                    <div class="col-xs-2">
+                        <p>
+                            <a href="http://www.numpy.org/">numpy</a>
+                        </p>
+                        <p>
+                            <a href="https://www.scipy.org/scipylib/index.html">scipy</a>
+                        </p>
+                        <p>
+                            <a href="https://github.com/PyMySQL/PyMySQL">pymysql</a>
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div role="tabpanel" class="tab-pane {% if query == 1 %} active{% endif %}" id="query1">
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="well col-lg-11">
+                        List the number of patients who had “tumor” (disease description), “leukemia” (disease type) and
+                        “ALL” (disease name), separately.
+                    </div>
+                </div>
+
+                <div class="row">
+                    <form class="form-horizontal" method="post" action="{% url 'query1' %}">
+                        {% csrf_token %}
+                        <fieldset>
+
+                            <div class="form-group">
+                                <h4 class="col-lg-1"></h4>
+                                <h4 class="col-lg-11">Customize :</h4>
+                            </div>
+                            <div class="form-group">
+                                <label for="column_name" class="col-lg-2 control-label">Column Name</label>
+                                <div class="col-lg-10">
+                                    <select name="column_name" class="form-control" id="column_name">
+                                        <option value="ds_id" {% if column_name == 'ds_id' %}selected{% endif %}>ds_id
+                                        </option>
+                                        <option value="name" {% if column_name == 'name' %}selected{% endif %}>name
+                                        </option>
+                                        <option value="type" {% if column_name == 'type' %}selected{% endif %}>type
+                                        </option>
+                                        <option value="description"
+                                                {% if column_name == 'description' %}selected{% endif %}>description
+                                        </option>
+                                    </select>
+                                    <br>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="column_value" class="col-lg-2 control-label">Column Detail</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="column_value" class="form-control" id="column_value"
+                                           required
+                                           placeholder="Column Value"
+                                           autocomplete="off"
+                                            {% if q_result == 1 %}
+                                           value="{{ column_value }} "
+                                            {% endif %}
+                                    >
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-10 col-lg-offset-2">
+                                    <button type="submit" class="pull-right btn btn-primary" id="load"
+                                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                </div>
+
+                {% if q_result == 1 %}
+                    <div class="row">
+
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">Number of Patients</h3>
+                        </div>
+                        <div class="row">
+                            <h1 class="col-lg-12 text-center"><strong>{{ count }}</strong></h1>
+                        </div>
+
+                    </div>
+                {% endif %}
+            </div>
+            <div role="tabpanel" class="tab-pane {% if query == 2 %} active{% endif %}" id="query2">
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="well col-lg-11">
+                        List the types of drugs which have been applied to patients with “tumor”.
+                    </div>
+                </div>
+
+                <div class="row">
+                    <form class="form-horizontal" action="{% url 'query2' %}" method="post">
+                        {% csrf_token %}
+
+                        <fieldset>
+
+                            <div class="form-group">
+                                <h4 class="col-lg-1"></h4>
+                                <h4 class="col-lg-11">Customize :</h4>
+                            </div>
+                            <div class="form-group">
+                                <label for="column_name" class="col-lg-2 control-label">Column Name</label>
+                                <div class="col-lg-10">
+                                    <select name="column_name" class="form-control" id="column_name">
+                                        <option value="ds_id" {% if column_name == 'ds_id' %}selected{% endif %}>ds_id
+                                        </option>
+                                        <option value="name" {% if column_name == 'name' %}selected{% endif %}>name
+                                        </option>
+                                        <option value="type" {% if column_name == 'type' %}selected{% endif %}>type
+                                        </option>
+                                        <option value="description"
+                                                {% if column_name == 'description' %}selected{% endif %}>description
+                                        </option>
+                                    </select>
+                                    <br>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="column_value" class="col-lg-2 control-label">Column Detail</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="column_value" class="form-control" id="column_value"
+                                           required
+                                           placeholder="Column Value"
+                                           autocomplete="off"
+                                            {% if q_result == 2 %}
+                                           value="{{ column_value }} "
+                                            {% endif %}
+                                    >
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-10 col-lg-offset-2">
+                                    <button type="submit" class="pull-right btn btn-primary" id="load"
+                                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                </div>
+
+                {% if q_result == 2 %}
+                    <div class="row">
+
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">Types of Drugs</h3>
+                        </div>
+                        <div class="row">
+                            <table class="table table-hover centered">
+                                {% for row in drug %}
+                                    <tr>
+                                        <td>{{ row }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+
+                    </div>
+                {% endif %}
+            </div>
+            <div role="tabpanel" class="tab-pane {% if query == 3 %} active{% endif %}" id="query3">
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="well col-lg-11">
+                        For each sample of patients with “ALL”, list the mRNA values (expression) of probes in cluster
+                        id “00002” for each experiment with measure unit id = “001”.
+                    </div>
+                </div>
+
+                <div class="row">
+                    <form class="form-horizontal" action="{% url 'query3' %}" method="post">
+                        {% csrf_token %}
+
+                        <fieldset>
+
+                            <div class="form-group">
+                                <h4 class="col-lg-1"></h4>
+                                <h4 class="col-lg-11">Customize :</h4>
+                            </div>
+                            <div class="form-group">
+                                <label for="disease_name" class="col-lg-2 control-label">Disease Name</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="ds_name" class="form-control" id="disease_name"
+                                           required placeholder="Disease Name"
+                                           autocomplete="off"
+                                            {% if q_result == 3 %}
+                                           value="{{ ds_name }} "
+                                            {% endif %}>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="measure_unit_id" class="col-lg-2 control-label">Measure Unit ID</label>
+                                <div class="col-lg-10">
+                                    <input type="number" name="mu_id" class="form-control" id="measure_unit_id"
+                                           required placeholder="Measure Unit ID"
+                                           autocomplete="off"
+                                    >
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cluster_id" class="col-lg-2 control-label">Cluster ID</label>
+                                <div class="col-lg-10">
+                                    <input type="number" name="cl_id" class="form-control" id="cluster_id"
+                                           required placeholder="Cluster ID"
+                                           autocomplete="off"
+                                    >
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-10 col-lg-offset-2">
+                                    <button type="submit" class="pull-right btn btn-primary" id="load"
+                                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                </div>
+
+                {% if q_result == 3 %}
+                    <div class="row">
+
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">mRNA Values</h3>
+                        </div>
+                        <div class="row">
+                            <table class="table table-hover centered">
+                                {% for row in exp %}
+                                    <tr>
+                                        <td>{{ row }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+
+                    </div>
+                {% endif %}
+            </div>
+            <div role="tabpanel" class="tab-pane {% if query == 4 %} active{% endif %}" id="query4">
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="well col-lg-11">
+                        For probes belonging to GO with id = “0012502”, calculate the t statistics of the expression
+                        values between patients with “ALL” and patients without “ALL”.
+                    </div>
+                </div>
+
+                <div class="row">
+                    <form class="form-horizontal" method="post" action="{% url 'query4' %}">
+                        {% csrf_token %}
+
+                        <fieldset>
+
+                            <div class="form-group">
+                                <h4 class="col-lg-1"></h4>
+                                <h4 class="col-lg-11">Customize :</h4>
+                            </div>
+                            <div class="form-group">
+                                <label for="disease_name" class="col-lg-2 control-label">Disease Name</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="ds_name" class="form-control" id="disease_name"
+                                           required placeholder="Disease Name"
+                                           autocomplete="off"
+                                    {% if q_result == 4 %}
+                                           value="{{ ds_name }} "
+                                            {% endif %}>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="gene_ontology_id" class="col-lg-2 control-label">Gene Ontology ID</label>
+                                <div class="col-lg-10">
+                                    <input type="number" name="go_id" class="form-control" id="gene_ontology_id"
+                                           required placeholder="Gene Ontology ID"
+                                           autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-10 col-lg-offset-2">
+                                    <button type="submit" class="pull-right btn btn-primary" id="load"
+                                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                </div>
+
+                {% if q_result == 4 %}
+                    <div class="row">
+
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">T-Statistic</h3>
+                        </div>
+                        <div class="row">
+                            <h1 class="col-lg-12 text-center"><strong>{{ t_stat }}</strong></h1>
+                        </div>
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">p Value</h3>
+                        </div>
+                        <div class="row">
+                            <h1 class="col-lg-12 text-center"><strong>{{ p_value }}</strong></h1>
+                        </div>
+
+                    </div>
+                {% endif %}
+            </div>
+            <div role="tabpanel" class="tab-pane {% if query == 5 %} active{% endif %}" id="query5">
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="well col-lg-11">
+                        For probes belonging to GO with id=“0007154”, calculate the F statistics of the expression
+                        values among patients with “ALL”, “AML”, “colon tumor” and “breast tumor”.
+                    </div>
+                </div>
+
+                <div class="row">
+                    <form class="form-horizontal" method="post" action="{% url 'query5' %}">
+                        {% csrf_token %}
+
+                        <fieldset>
+
+                            <div class="form-group">
+                                <h4 class="col-lg-1"></h4>
+                                <h4 class="col-lg-11">Customize :</h4>
+                            </div>
+                            <div class="form-group">
+                                <label for="gene_ontology_id" class="col-lg-2 control-label">Gene Ontology ID</label>
+                                <div class="col-lg-10">
+                                    <input type="number" name="go_id" class="form-control" id="gene_ontology_id"
+                                           required placeholder="Gene Ontology ID"
+                                           autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="disease_1" class="col-lg-2 control-label">Disease 1</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="disease_1" class="form-control" id="disease_1"
+                                           required placeholder="Disease 1"
+                                           autocomplete="off"
+                                                                        {% if q_result == 5 %}
+                                           value="{{ disease_1 }} "
+                                            {% endif %}>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="disease_2" class="col-lg-2 control-label">Disease 2</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="disease_2" class="form-control" id="disease_2"
+                                           required placeholder="Disease 2"
+                                           autocomplete="off"
+                                    {% if q_result == 5 %}
+                                           value="{{ disease_2 }} "
+                                            {% endif %}>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="disease_3" class="col-lg-2 control-label">Disease 3</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="disease_3" class="form-control" id="disease_3"
+                                           required placeholder="Disease 3"
+                                           autocomplete="off"
+                                    {% if q_result == 5 %}
+                                           value="{{ disease_3 }} "
+                                            {% endif %}>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="disease_4" class="col-lg-2 control-label">Disease 4</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="disease_4" class="form-control" id="disease_4"
+                                           required placeholder="Disease 4"
+                                           autocomplete="off"
+                                    {% if q_result == 5 %}
+                                           value="{{ disease_4 }} "
+                                            {% endif %}>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-lg-10 col-lg-offset-2">
+                                    <button type="submit" class="pull-right btn btn-primary" id="load"
+                                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                </div>
+
+                {% if q_result == 5 %}
+                    <div class="row">
+
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">F-Statistic</h3>
+                        </div>
+                        <div class="row">
+                            <h1 class="col-lg-12 text-center"><strong>{{ f_stat }}</strong></h1>
+                        </div>
+
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">p Value</h3>
+                        </div>
+                        <div class="row">
+                            <h1 class="col-lg-12 text-center"><strong>{{ p_value }}</strong></h1>
+                        </div>
+
+                    </div>
+                {% endif %}
+            </div>
+            <div role="tabpanel" class="tab-pane {% if query == 6 %} active{% endif %}" id="query6">
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="well col-lg-11">
+                        For probes belonging to GO with id=“0007154”, calculate the average correlation of the
+                        expression values between two patients with “ALL”, and calculate the average correlation of the
+                        expression values between one “ALL” patient and one “AML” patient.
+                    </div>
+                </div>
+
+                <div class="row">
+                    <form class="form-horizontal" method="post" action="{% url 'query6' %}">
+                        {% csrf_token %}
+                        <fieldset>
+
+                            <div class="form-group">
+                                <h4 class="col-lg-1"></h4>
+                                <h4 class="col-lg-11">Customize :</h4>
+                            </div>
+                            <div class="form-group">
+                                <label for="gene_ontology_id" class="col-lg-2 control-label">Gene Ontology ID</label>
+                                <div class="col-lg-10">
+                                    <input type="number" name="go_id" class="form-control" id="gene_ontology_id"
+                                           required placeholder="Gene Ontology ID"
+                                           autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="disease_1" class="col-lg-2 control-label">Disease 1</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="disease_1" class="form-control" id="disease_1"
+                                           required placeholder="Disease 1"
+                                           autocomplete="off"
+                                    {% if q_result == 6 %}
+                                           value="{{ disease_1 }} "
+                                            {% endif %}>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="disease_2" class="col-lg-2 control-label">Disease 2</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="disease_2" class="form-control" id="disease_2"
+                                           required placeholder="Disease 2"
+                                           autocomplete="off"
+                                    {% if q_result == 6 %}
+                                           value="{{ disease_2 }} "
+                                            {% endif %}>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-10 col-lg-offset-2">
+                                    <button type="submit" class="pull-right btn btn-primary" id="load"
+                                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                </div>
+
+                {% if q_result == 6 %}
+                    <div class="row">
+
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">{{ disease_1 }} v {{ disease_1 }}</h3>
+                        </div>
+                        <div class="row">
+                            <h1 class="col-lg-12 text-center"><strong>{{ a_a }}</strong></h1>
+                        </div>
+
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">{{ disease_1 }} v {{ disease_2 }}</h3>
+                        </div>
+                        <div class="row">
+                            <h1 class="col-lg-12 text-center"><strong>{{ a_b }}</strong></h1>
+                        </div>
+
+                    </div>
+                {% endif %}
+            </div>
+            <div role="tabpanel" class="tab-pane {% if query == 7 %} active{% endif %}" id="query7">
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="well col-lg-11">
+                        Given a specific disease, find the informative genes.
+                    </div>
+                </div>
+
+                <div class="row">
+                    <form class="form-horizontal" method="post" action="{% url 'query7' %}">
+                        {% csrf_token %}
+                        <fieldset>
+
+                            <div class="form-group">
+                                <h4 class="col-lg-1"></h4>
+                                <h4 class="col-lg-11">Customize :</h4>
+                            </div>
+                            <div class="form-group">
+                                <label for="disease_name" class="col-lg-2 control-label">Disease Name</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="ds_name" class="form-control" id="disease_name"
+                                           required placeholder="Disease Name"
+                                           autocomplete="off"
+                                    {% if q_result == 7 %}
+                                           value="{{ ds_name }} "
+                                            {% endif %}>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-10 col-lg-offset-2">
+                                    <button type="submit" class="pull-right btn btn-primary" id="load"
+                                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                </div>
+
+                {% if q_result == 7 %}
+                    <div class="row">
+
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">Informative Genes</h3>
+                        </div>
+                        <div class="row">
+                            <table class="table table-hover centered">
+                                {% for row in if_gene %}
+                                    <tr>
+                                        <td>{{ row }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+
+                    </div>
+                {% endif %}
+            </div>
+            <div role="tabpanel" class="tab-pane {% if query == 8 %} active{% endif %}" id="query8">
+                <div class="row">
+                    <div class="col-lg-1"></div>
+                    <div class="well col-lg-11">
+                        Use informative genes to classify a new patient (five test cases in test_samples.txt are
+                        given in the data).
+                    </div>
+                </div>
+
+                <div class="row">
+                    <form class="form-horizontal" action="{% url 'query8' %}" method="post">
+                        {% csrf_token %}
+
+                        <fieldset>
+
+                            <div class="form-group">
+                                <h4 class="col-lg-1"></h4>
+                                <h4 class="col-lg-11">Customize :</h4>
+                            </div>
+                            <div class="form-group">
+                                <label for="disease_name" class="col-lg-2 control-label">Disease Name</label>
+                                <div class="col-lg-10">
+                                    <input type="text" name="ds_name" class="form-control" id="disease_name"
+                                           required placeholder="Disease Name"
+                                           autocomplete="off"
+                                    {% if q_result == 8 %}
+                                           value="{{ ds_name }} "
+                                            {% endif %}>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-lg-10 col-lg-offset-2">
+                                    <button type="submit" class="pull-right btn btn-primary" id="load"
+                                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Loading">
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+
+                {% if q_result == 8 %}
+                    <div class="row">
+
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">Tested Positive</h3>
+                        </div>
+                        <div class="row">
+                            <table class="table table-hover centered">
+                                {% for row in positive %}
+                                    <tr>
+                                        <td>{{ row }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+
+                        <div class="row">
+                            <h3 class="col-lg-12 text-center">Tested Negative</h3>
+                        </div>
+                        <div class="row">
+                            <table class="table table-hover centered">
+                                {% for row in negative %}
+                                    <tr>
+                                        <td>{{ row }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
 
 <script src="http://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
         crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+<script>
+
+    $('.nav-tabs a').click(function (e) {
+        e.preventDefault();
+        $(this).tab('show')
+    });
+
+
+    $(document).on('submit', '.form-horizontal', function (e) {
+                var $this = $(this);
+
+        var $button = $this.find('.btn');
+        $button.button('loading');
+    });
+
+
+
+    $('input').val(function (_, value) {
+        return $.trim(value);
+    });
+</script>
 </body>
 </html>
