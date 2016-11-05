@@ -2,17 +2,16 @@ package hierarchical;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+@SuppressWarnings("Duplicates")
 public class HierarchicalClustering {
 
-    TreeMap<Double, Integer> clusterIdMap;
+    private TreeMap<Double, Integer> clusterIdMap;
 
     public void mainHAC(int kValue, String fileName) throws FileNotFoundException {
 
@@ -24,20 +23,19 @@ public class HierarchicalClustering {
 
         initialClusterSet.addAll(data);
 
-        int no = 1;
         long startTime = System.currentTimeMillis();
+
         // Build clusters
         while (data.size() > kValue) {
 
             Cluster nextCluster = getNextSet(data);
             resultClusterList.add(nextCluster);
             // System.out.print(no + ". ");
-            no++;
             // nextCluster.printId();
 
         }
 
-        clusterIdMap = new TreeMap<Double, Integer>();
+        clusterIdMap = new TreeMap<>();
         int id = data.size();
 
         // Fill cluster Id Matrix
@@ -58,7 +56,7 @@ public class HierarchicalClustering {
         writeResultsToFile(fileName);
     }
 
-    public Cluster getNextSet(List<Cluster> data) {
+    private Cluster getNextSet(List<Cluster> data) {
 
         Cluster[] nextSet = new Cluster[2];
         double minDist = Double.MAX_VALUE;
@@ -77,7 +75,7 @@ public class HierarchicalClustering {
         // return nextSet;
     }
 
-    public Cluster combineClusterSet(Cluster[] nextSet, List<Cluster> data, double distance) {
+    private Cluster combineClusterSet(Cluster[] nextSet, List<Cluster> data, double distance) {
 
         int index = data.indexOf(nextSet[0]);
         Cluster a = data.get(index);
@@ -95,7 +93,7 @@ public class HierarchicalClustering {
 
     }
 
-    public int[][] fillGroundTruthMatrix(List<Cluster> initialClusterSet) {
+    private int[][] fillGroundTruthMatrix(List<Cluster> initialClusterSet) {
 
         int size = initialClusterSet.size();
         int[][] groundTruthMatrix = new int[size][size];
@@ -113,7 +111,7 @@ public class HierarchicalClustering {
 
     }
 
-    public int[][] fillClusterIdMatrix(List<Cluster> initialClusterSet) {
+    private int[][] fillClusterIdMatrix(List<Cluster> initialClusterSet) {
 
         int size = initialClusterSet.size();
         int[][] clusterIdMatrix = new int[size][size];
@@ -125,7 +123,7 @@ public class HierarchicalClustering {
                 double firstGeneId = first.entryRow.get(0).get(0);
                 double secondGeneId = second.entryRow.get(0).get(0);
 
-                if (clusterIdMap.get(firstGeneId) == clusterIdMap.get(secondGeneId))
+                if (Objects.equals(clusterIdMap.get(firstGeneId), clusterIdMap.get(secondGeneId)))
                     clusterIdMatrix[i][j] = clusterIdMatrix[j][i] = 1;
                 else
                     clusterIdMatrix[i][j] = clusterIdMatrix[j][i] = 0;
@@ -135,12 +133,12 @@ public class HierarchicalClustering {
         return clusterIdMatrix;
     }
 
-    public double calculateJaccard(List<Cluster> initialClusterSet) {
+    private double calculateJaccard(List<Cluster> initialClusterSet) {
 
         int[][] clusterIdMatrix = fillClusterIdMatrix(initialClusterSet);
         int[][] groundTruthMatrix = fillGroundTruthMatrix(initialClusterSet);
 
-        int m11 = 0, m10 = 0, m01 = 0, m00 = 0;
+        int m11 = 0, m10 = 0, m01 = 0;
 
         for (int i = 0; i < groundTruthMatrix.length; i++) {
             for (int j = 0; j < groundTruthMatrix.length; j++) {
@@ -152,22 +150,19 @@ public class HierarchicalClustering {
                     m10++;
                 else if (val == 1)
                     m01++;
-                else
-                    m00++;
             }
         }
 //		System.out.println(m11 + "|" + m10 + "|" + m01 + "|" + m00);
-        double jaccardCoefficient = (double) m11 / (double) (m11 + m10 + m01);
 
-        return jaccardCoefficient;
+        return (double) m11 / (double) (m11 + m10 + m01);
 
     }
 
-    public void writeResultsToFile(String fileName) {
+    private void writeResultsToFile(String fileName) {
 
         Iterator it = clusterIdMap.entrySet().iterator();
 
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
 
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry) it.next();
@@ -175,16 +170,13 @@ public class HierarchicalClustering {
             double db_gene_id = (double) pair.getKey();
             int gene_id = (int) db_gene_id;
             int cluster_id = (int) pair.getValue();
-            StringBuilder sb = new StringBuilder();
-            sb.append(gene_id + " " + cluster_id);
-            lines.add(sb.toString());
+            lines.add(String.valueOf(gene_id) + " " + cluster_id);
 //			System.out.println(sb.toString());
         }
         Path file = Paths.get("outputs/" + fileName + "_hierarchical.txt");
         try {
             Files.write(file, lines, Charset.forName("UTF-8"));
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
