@@ -109,14 +109,12 @@ public class DBScan {
         double jaccardCoefficient = Jaccard.calculate(data, clusters);
 
 
-        System.out.println("----------------------");
-        System.out.println("FileName = " + fileName);
         System.out.println("EPS = " + EPS);
         System.out.println("MINPTS = " + MINPTS);
         System.out.println("Number of Clusters = " + clusters.size());
+        System.out.println();
         System.out.println("Jaccard Coefficient = " + jaccardCoefficient);
         System.out.println("Total execution time: " + (endTime - startTime) + " milliseconds");
-        System.out.println();
     }
 
     private double getDistance(ArrayList<Float> gene1, ArrayList<Float> gene2) {

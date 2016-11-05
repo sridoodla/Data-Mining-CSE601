@@ -32,4 +32,4 @@ def plot(file_name, n, method):
     plt.show()
 
 
-plot('iyer', 25, 'dbscan')
+plot('iyer', 10, 'kmeans')

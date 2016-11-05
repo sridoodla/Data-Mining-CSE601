@@ -2,7 +2,7 @@ package kmeans;
 
 import common.Jaccard;
 
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -10,20 +10,34 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 
+@SuppressWarnings("Duplicates")
 public class KMeans {
 
-    static HashMap<Integer, List<Float>> cluster_data;
     static int count[] = new int[5];
 
-    public void main() throws FileNotFoundException {
-        int n = 5; // clusters
+    public void main(int n, String fileName) throws IOException {
+
+        int file_int;
+        switch (fileName) {
+            case "cho":
+                file_int = 4;
+                break;
+            case "iyer":
+                file_int = 3;
+                break;
+            case "new_data_1":
+                file_int = 1;
+                break;
+            default:
+                file_int = 2;
+                break;
+        }
 
 
-        // (1) new_dataset1.txt
-        // (2) new_dataset2.text
-        // (3) iyer.txt
-        // (4) cho.txt
-        float[][] data = ReadFile.readFile(4);
+        final long startTime = System.currentTimeMillis();
+
+        float[][] data = ReadFile.readFile(file_int);
+        int rows = data.length;
         int cols = data[0].length;
         float[][] clusters_mean = new float[n][cols - 2];
 
@@ -68,8 +82,66 @@ public class KMeans {
         double jc = Jaccard.calculate(data, new_cluster_data);
         System.out.println();
         System.out.println("Jaccard Co-efficient: " + jc);
+        final long endTime = System.currentTimeMillis();
+        System.out.println("Total execution time: " + (endTime - startTime) + " milliseconds");
+
+
+        int[] gene_array = pca_output(new_cluster_data, rows);
+        write_to_file(gene_array, fileName);
     }
 
+    private static int[] pca_output(HashMap<Integer, List<Float>> new_cluster_data, int rows) {
+        int[] gene_array = new int[rows];
+        for (Entry<Integer, List<Float>> entry : new_cluster_data.entrySet()) {
+            Integer key = entry.getKey();
+            List<Float> value = entry.getValue();
+            String s;
+            int num;
+
+            for (Float aValue : value) {
+                s = aValue + "";
+                num = Integer.valueOf(s.split("\\.")[0]);
+                gene_array[num - 1] = key;
+            }
+        }
+
+        return gene_array;
+
+    }
+
+    private void write_to_file(int[] gene_array, String fileName) throws IOException {
+        try {
+            String path = "outputs/" + fileName + "_kmeans.txt";
+
+            File file = new File(path);
+            if (file.exists()) {
+                file.delete();
+            }
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            int rows = gene_array.length;
+            String s;
+            int gene_id, cluster_id;
+            for (int i = 0; i < rows; i++) {
+
+                gene_id = i + 1;
+                cluster_id = gene_array[i];
+                s = gene_id + "	" + cluster_id;
+                bw.write(s);
+                bw.newLine();
+
+
+            }
+            bw.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
 
     private static float[][] initial_cluster(float[][] data, int n) {
         int[] a = new int[n];  // initial cluster id
@@ -116,7 +188,7 @@ public class KMeans {
     private static HashMap<Integer, List<Float>> categorise_data(float[][] data, float[][] clusters, int num_clusters) {
         //HashMap <Integer,List<Float>>
 
-        cluster_data = new HashMap<>();
+        HashMap<Integer, List<Float>> cluster_data = new HashMap<>();
         int cluster_id;
         int k = 0;
         int cols = data[0].length;
@@ -261,7 +333,7 @@ public class KMeans {
 // part of finding the 386x386 arrayf for ground truth
 
 	/*	String s="",s2=""; int num=0,num2=0;
-	int[] gene_array = new int[rows];
+    int[] gene_array = new int[rows];
 	for(int i=0;i<rows;i++)
 	{
 		s=data[i][1]+"";
