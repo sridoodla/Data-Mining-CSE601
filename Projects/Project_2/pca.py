@@ -32,4 +32,4 @@ def plot(file_name, n, method):
     plt.show()
 
 
-plot('iyer', 10, 'kmeans')
+plot('new_data_1', 3, 'kmeans')

@@ -15,11 +15,11 @@ public class HierarchicalClustering {
 
     public void mainHAC(int kValue, String fileName) throws FileNotFoundException {
 
-        List<Cluster> resultClusterList = new ArrayList<Cluster>();
+        List<Cluster> resultClusterList = new ArrayList<>();
 
         ReadFile rf = new ReadFile();
         List<Cluster> data = rf.readFile(fileName);
-        List<Cluster> initialClusterSet = new ArrayList<Cluster>();
+        List<Cluster> initialClusterSet = new ArrayList<>();
 
         initialClusterSet.addAll(data);
 
@@ -36,7 +36,7 @@ public class HierarchicalClustering {
         }
 
         clusterIdMap = new TreeMap<>();
-        int id = data.size();
+        int id = 1;
 
         // Fill cluster Id Matrix
         for (Cluster c : data) {

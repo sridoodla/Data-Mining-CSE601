@@ -49,7 +49,7 @@ public class KMeans {
         HashMap<Integer, List<Float>> new_cluster_data = null;
         HashMap<Integer, List<Float>> prev_cluster_data = null;
 
-        for (int count = 0; count < 50; count++) {
+        for (int count = 0; count < 12; count++) {
 
             if (count == 0) {
                 clusters_mean = initial_cluster(data, n);
@@ -163,11 +163,8 @@ public class KMeans {
         }
         System.out.println(Arrays.toString(a));
 
-			/*int[] b = {2,5};
-            for(int i=0;i<b.length;i++)
-			{
-				a[i] = b[i];
-			}*/
+        int[] b = {39, 40, 41};
+        System.arraycopy(b, 0, a, 0, b.length);
         int j = 0, l = 0;
         for (int i = 0; i < n; i++) {
             for (int k = 2; k < cols; k++) {
