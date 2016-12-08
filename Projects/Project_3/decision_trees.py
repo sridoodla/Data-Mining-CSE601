@@ -1,27 +1,33 @@
 import copy
 import math
+import random
 from statistics import mode, StatisticsError
 
-from Projects.Project_3.models import DataRow, TreeNode, DataColumn
+from Projects.Project_3.models import DataRow, TreeNode, DataColumn, SplitAlgo
 
 indexed_attributes = []
+
+depth = 0
 
 
 def load_data(data_set=1):
     path = 'data/project3_dataset{}.txt'.format(data_set)
 
     array = []
+
+    def is_number(s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+
     with open(path) as file:
         for row in file:
             data = row.split('\t')
 
-            # Check for the nominal attributes in Dataset2
-            # TODO: Handle Nominal Attributes
-            if data_set == 2:
-                data[4] = 1 if data[4] == 'Present' else 0
-
             # As everything is in string, type cast to Float
-            data = [float(x) for x in data]
+            data = [float(x) if is_number(x) else x for x in data]
 
             # Making it an object here as it will be easier ahead.
             data_row = DataRow(data[-1], data[:-1])
@@ -52,101 +58,135 @@ def normalize_data(inputs):
     pass
 
 
-# Using Classification Error to split. ( Because it is easiest, atm )
-def get_split_index(input_data, attributes):
+def get_classification_error(inputs):
+    positives = inputs.count(1.0)
+    negatives = len(inputs) - positives
+    classification_error = 1 - max(positives, negatives) / len(inputs)
+
+    return classification_error
+
+
+def get_classification_error_for_split(inputs_left, inputs_right):
+    return min(get_classification_error(inputs_left),
+               get_classification_error(inputs_right))
+
+
+def get_gini_error_for_split(inputs_left, inputs_right, total):
+    return 0
+
+
+def get_split_index(input_data, attributes, split_on=SplitAlgo.CLERROR):
     index = -1
 
     # 1 because it is higher than maximum value possible.
     # So regardless of our calculated error, it will be assigned to min_error
-    min_error = 1
+    min_measure = 1
+    nominal_choice = None
 
-    total_class_values = len(input_data)
 
     for i in range(len(attributes)):
 
         if i not in indexed_attributes:
-            inputs_lt = [x.truth for x in input_data if x.data[i] < attributes[i].mean]
-            inputs_gte = [x.truth for x in input_data if x.data[i] >= attributes[i].mean]
+            temp_choice = None
 
-            positives_in_inputs_lt = inputs_lt.count(1.0)
-            positives_in_inputs_gte = inputs_gte.count(1.0)
+            if attributes[i].type == 'Continuous':
+                inputs_left = [x.truth for x in input_data if x.data[i] < attributes[i].median]
+                inputs_right = [x.truth for x in input_data if x.data[i] >= attributes[i].median]
 
-            classification_error_for_lt = 1 - max(positives_in_inputs_lt,
-                                                  total_class_values - positives_in_inputs_lt) / total_class_values
+                if split_on == SplitAlgo.CLERROR:
+                    split_measure = get_classification_error_for_split(inputs_left, inputs_right)
+                elif split_on == SplitAlgo.GINI:
+                    split_measure = get_gini_error_for_split(inputs_left, inputs_right)
+            else:
+                choices = attributes[i].choices
 
-            classification_error_for_gte = 1 - max(positives_in_inputs_gte,
-                                                   total_class_values - positives_in_inputs_gte) / total_class_values
+                temp_min_measure = 1
+                for choice in choices:
+                    inputs_left = [x.truth for x in input_data if x.data[i] != choice]
+                    inputs_right = [x.truth for x in input_data if x.data[i] == choice]
 
-            classification_error = min(classification_error_for_lt, classification_error_for_gte)
+                    if split_on == SplitAlgo.CLERROR:
+                        split_measure = get_classification_error_for_split(inputs_left, inputs_right)
+                    elif split_on == SplitAlgo.GINI:
+                        split_measure = get_gini_error_for_split(inputs_left, inputs_right)
 
-            if classification_error < min_error:
-                min_error = classification_error
+                    if split_measure < temp_min_measure:
+                        temp_min_measure = split_measure
+                        temp_choice = choice
+
+                split_measure = temp_min_measure
+
+            if split_measure < min_measure:
+                min_measure = split_measure
+                nominal_choice = temp_choice
                 index = i
 
-    if index >= 0:
-        indexed_attributes.append(index)
-    return index
+                if nominal_choice is not None:
+                    attributes[index].choices.remove(nominal_choice)
+
+    indexed_attributes.append(index)
+
+    if attributes[index].choices is not None:
+        if len(attributes[index].choices) > 1:
+            indexed_attributes.remove(index)
+
+    return index, nominal_choice
 
 
-def buildTree(input_data, attributes, pruning_size=5, variance_check=False):
+def get_mode_label(input_data):
+    try:
+        return mode([x.truth for x in input_data])
+    except StatisticsError:
+        return [x.truth for x in input_data].pop()
+
+
+def build_tree(input_data, attributes, split_on, pruning_size=5):
     classes = set([x.truth for x in input_data])
 
     node = TreeNode()
-
+    node.count = len(input_data)
     # Pruning
+
+    # Stop if all instances belong to the same class
     if len(classes) == 1:
         node.label = classes.pop()
-        return node
+
+    # Stop if number of instances is less than some user specified threshold
     elif len(input_data) < pruning_size:
-        if len(input_data) != 0:
-            try:
-                node.label = mode([x.truth for x in input_data])
-            except StatisticsError:
-                node.label = [x.truth for x in input_data].pop()
-            return node
-        else:
-            return None
+        node.label = get_mode_label(input_data)
 
     else:
 
         # Because we don't have column headings. Keeping track of attributes by their column index
         # If index is not None, means that the node is not a leaf node. Compare on the index when classifying.
-        index = get_split_index(input_data, attributes)
+        index, choice = get_split_index(input_data, attributes, split_on)
 
         if index < 0:
-            if len(input_data) != 0:
-                try:
-                    node.label = mode([x.truth for x in input_data])
-                except StatisticsError:
-                    node.label = [x.truth for x in input_data].pop()
-                return node
-            else:
-                return None
+            node.label = get_mode_label(input_data)
         else:
             node.index = index
+            node.choice = choice
 
-            # Get data less than attribute at index
-            data_lt = [x for x in input_data if x.data[node.index] < attributes[node.index].mean]
-            # Get data greater than or equal to attribute at index
-            data_gte = [x for x in input_data if x.data[node.index] >= attributes[node.index].mean]
+            if choice is None:
+                data_left = [x for x in input_data if x.data[node.index] < attributes[node.index].median]
+                data_right = [x for x in input_data if x.data[node.index] >= attributes[node.index].median]
+            else:
+                data_left = [x for x in input_data if x.data[node.index] != choice]
+                data_right = [x for x in input_data if x.data[node.index] == choice]
 
-            if len(data_lt) == 0:
-                try:
-                    node.label = mode([x.truth for x in data_gte])
-                except StatisticsError:
-                    node.label = [x.truth for x in data_gte].pop()
-                return node
-            elif len(data_gte) == 0:
-                try:
-                    node.label = mode([x.truth for x in data_lt])
-                except StatisticsError:
-                    node.label = [x.truth for x in data_lt].pop()
-                return node
-
-            node.left = buildTree(data_lt, get_attributes(data_lt),
-                                  pruning_size)  # TODO: Check if attributes need to be regenerated
-            node.right = buildTree(data_gte, get_attributes(data_gte),
-                                   pruning_size)  # Important now, because bugging out if not being regenerated
+            if len(data_left) == 0:
+                node.label = get_mode_label(data_right)
+            elif len(data_right) == 0:
+                node.label = get_mode_label(data_left)
+            else:
+                node.left = build_tree(input_data=data_left,
+                                       attributes=attributes,
+                                       pruning_size=pruning_size,
+                                       split_on=split_on)  # TODO: Check if attributes need to be regenerated
+                node.right = build_tree(input_data=data_right,
+                                        attributes=attributes,
+                                        pruning_size=pruning_size,
+                                        split_on=split_on)
 
     return node
 
@@ -159,18 +199,24 @@ def get_attributes(inputs):
     return array
 
 
-def classifyData(root, input_data, attributes):
+def classify_testing_data(root, input_data, attributes):
     a, b, c, d = 0, 0, 0, 0
 
     for input in input_data:
         node = copy.deepcopy(root)
         while node.label is None:
-            index = node.index
+            index, choice = node.index, node.choice
 
-            if input.data[index] < attributes[index].mean:
-                node = node.left
+            if choice is None:
+                if input.data[index] < attributes[index].median:
+                    node = node.left
+                else:
+                    node = node.right
             else:
-                node = node.right
+                if input.data[index] != choice:
+                    node = node.left
+                else:
+                    node = node.right
 
         if input.truth == node.label:
 
@@ -188,7 +234,7 @@ def classifyData(root, input_data, attributes):
     return a, b, c, d
 
 
-def calculateStatistics(a, b, c, d):
+def calculate_statistics(a, b, c, d):
     accuracy = (a + d) / (a + b + c + d)
     precision = a / (a + c)
     recall = a / (a + b)
@@ -200,21 +246,28 @@ def calculateStatistics(a, b, c, d):
     print('F-Measure : {}'.format(f_measure))
 
 
-def run_algorithm(data_set=1, normalization=True, split_value=0.80, variance_check=False):
+def run_algorithm(data_set=1, normalization=True, split_value=0.85, shuffle=True, split_on=SplitAlgo.CLERROR):
     data = load_data(data_set)
-    # random.shuffle(data)
+
+    if shuffle:
+        random.shuffle(data)
     if normalization:
         normalize_data(data)
 
     attributes = get_attributes(data)
     training_data, testing_data = split_data(data, split_value=split_value)
 
-    root = buildTree(training_data, attributes=attributes, variance_check=variance_check)
+    root = build_tree(input_data=training_data,
+                      attributes=attributes,
+                      split_on=split_on)
 
-    a, b, c, d = classifyData(root=copy.deepcopy(root), input_data=testing_data, attributes=attributes)
+    a, b, c, d = classify_testing_data(root=copy.deepcopy(root), input_data=testing_data, attributes=attributes)
 
-    calculateStatistics(a, b, c, d)
+    calculate_statistics(a, b, c, d)
 
 
-run_algorithm(data_set=1,
-              normalization=False)
+run_algorithm(data_set=2,
+              normalization=False,
+              shuffle=False,
+              split_value=0.90,
+              split_on=SplitAlgo.CLERROR)

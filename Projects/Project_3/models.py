@@ -8,6 +8,7 @@ class TreeNode:
         self.right = None
         self.label = None
         self.index = None  # Index of the attribute being split on.
+        self.choice = None
 
 
 class DataRow:
@@ -19,5 +20,19 @@ class DataRow:
 
 class DataColumn:
     def __init__(self, data):
-        self.mean = mean(data)
-        self.median = median(data)
+        try:
+            self.mean = mean(data)
+            self.median = median(data)
+            self.type = 'Continuous'
+            self.choices = None
+        except TypeError:
+            self.mean = None
+            self.median = None
+            self.type = 'Nominal'
+            self.choices = list(set(data))
+
+
+class SplitAlgo:
+    GINI = 'GINI'
+    CLERROR = 'Classification Error'
+    ENTROPY = 'Entropy & Information Gain'
