@@ -16,6 +16,7 @@ def load_data(data_set=1):
             data = row.split('\t')
 
             # Check for the nominal attributes in Dataset2
+            # TODO: Handle Nominal Attributes
             if data_set == 2:
                 data[4] = 1 if data[4] == 'Present' else 0
 
@@ -129,6 +130,19 @@ def buildTree(input_data, attributes, pruning_size=5, variance_check=False):
             # Get data greater than or equal to attribute at index
             data_gte = [x for x in input_data if x.data[node.index] >= attributes[node.index].mean]
 
+            if len(data_lt) == 0:
+                try:
+                    node.label = mode([x.truth for x in data_gte])
+                except StatisticsError:
+                    node.label = [x.truth for x in data_gte].pop()
+                return node
+            elif len(data_gte) == 0:
+                try:
+                    node.label = mode([x.truth for x in data_lt])
+                except StatisticsError:
+                    node.label = [x.truth for x in data_lt].pop()
+                return node
+
             node.left = buildTree(data_lt, get_attributes(data_lt),
                                   pruning_size)  # TODO: Check if attributes need to be regenerated
             node.right = buildTree(data_gte, get_attributes(data_gte),
@@ -186,7 +200,7 @@ def calculateStatistics(a, b, c, d):
     print('F-Measure : {}'.format(f_measure))
 
 
-def run_algorithm(data_set=1, normalization=True, split_value=0.90, variance_check=False):
+def run_algorithm(data_set=1, normalization=True, split_value=0.80, variance_check=False):
     data = load_data(data_set)
     # random.shuffle(data)
     if normalization:
@@ -202,4 +216,5 @@ def run_algorithm(data_set=1, normalization=True, split_value=0.90, variance_che
     calculateStatistics(a, b, c, d)
 
 
-run_algorithm(data_set=1)
+run_algorithm(data_set=1,
+              normalization=False)
