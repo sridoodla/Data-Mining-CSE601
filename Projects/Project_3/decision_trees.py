@@ -141,7 +141,7 @@ def get_split_index(input_data, attributes, measure=ImpurityMeasure.CL_ERROR, pu
     :return: Index of the attribute to split on
     """
 
-    index, nominal_choice = None, None
+    index, nominal_choice = -1, None
 
     # 1 because it is higher than maximum value possible.
     # So regardless of our calculated error, it will be assigned to min_error
@@ -150,11 +150,10 @@ def get_split_index(input_data, attributes, measure=ImpurityMeasure.CL_ERROR, pu
     for i in range(len(attributes)):
 
         if i not in indexed_attributes:
-            temp_choice = None
+            temp_choice, temp_min_measure = None, 1
 
             choices = attributes[i].choices
 
-            temp_min_measure = 1
             for choice in choices:
                 inputs_left = [x.truth for x in input_data if x.data[i] != choice]
                 inputs_right = [x.truth for x in input_data if x.data[i] == choice]
@@ -168,14 +167,18 @@ def get_split_index(input_data, attributes, measure=ImpurityMeasure.CL_ERROR, pu
                     temp_min_measure = split_measure
                     temp_choice = choice
 
-            split_measure = temp_min_measure
-
-            if split_measure < min_measure:
-                min_measure = split_measure
+            if temp_min_measure < min_measure:
+                min_measure = temp_min_measure
                 nominal_choice = temp_choice
                 index = i
 
-    indexed_attributes.append(index)
+    if len(indexed_attributes) < len(attributes):
+        indexed_attributes.append(index)
+
+        if pure_split:
+            attributes[index].choices.remove(nominal_choice)
+            if len(attributes[index].choices) != 1:
+                indexed_attributes.remove(index)
 
     return index, nominal_choice
 
@@ -352,6 +355,10 @@ def run_algorithm(data_set=1, split_value=0.85, shuffle=True, measure=ImpurityMe
     :return: None
     """
 
+    assert no_of_bins > 1, "Number of Bins should be greater than 1"
+    assert split_value > 0.5, "Testing data cannot be larger than training data"
+    assert data_set in [1, 2, 4], "No such data-set exists"
+
     data = read_file(data_set)
 
     if shuffle:
@@ -375,9 +382,9 @@ def run_algorithm(data_set=1, split_value=0.85, shuffle=True, measure=ImpurityMe
 
 
 if __name__ == '__main__':
-    run_algorithm(data_set=1,
+    run_algorithm(data_set=5,
                   shuffle=False,
-                  split_value=0.80,
-                  no_of_bins=5,
-                  pure_split=False,
-                  measure=ImpurityMeasure.CL_ERROR)
+                  split_value=0.60,
+                  no_of_bins=10,
+                  pure_split=True,
+                  measure=ImpurityMeasure.GINI)
