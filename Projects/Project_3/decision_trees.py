@@ -91,7 +91,7 @@ def get_classification_error(inputs):
         classification_error = 1 - max(positives, negatives) / total
         return classification_error
     else:
-        return 0
+        return 1
 
 
 def get_classification_error_for_split(inputs_left, inputs_right):
@@ -132,12 +132,13 @@ def get_gini_error_for_split(inputs_left, inputs_right):
     return min(get_gini_error(inputs_left), get_gini_error(inputs_right))
 
 
-def get_split_index(input_data, attributes, measure=ImpurityMeasure.CL_ERROR, pure_split=False):
+def get_split_index(input_data, attributes, measure=ImpurityMeasure.CL_ERROR, expand=False):
     """
     Returns the index of the attribute to split on. We're using indexes as we don't have labels.
     :param input_data: The input dataset
     :param attributes: Array of Column objects
     :param measure: The measure to use while calculating error
+    :param expand: Whether to expand on the remaining attributes once one of them is already selected
     :return: Index of the attribute to split on
     """
 
@@ -175,7 +176,7 @@ def get_split_index(input_data, attributes, measure=ImpurityMeasure.CL_ERROR, pu
     if len(indexed_attributes) < len(attributes):
         indexed_attributes.append(index)
 
-        if pure_split:
+        if expand:
             attributes[index].choices.remove(nominal_choice)
             if len(attributes[index].choices) != 1:
                 indexed_attributes.remove(index)
@@ -190,7 +191,7 @@ def get_mode_label(input_data):
         return [x.truth for x in input_data].pop()
 
 
-def build_tree(input_data, attributes, split_on, pure_split, pruning_size=5):
+def build_tree(input_data, attributes, split_on, expand, pruning_size=5):
     classes = set([x.truth for x in input_data])
 
     node = TreeNode()
@@ -208,7 +209,7 @@ def build_tree(input_data, attributes, split_on, pure_split, pruning_size=5):
 
         # Because we don't have column headings. Keeping track of attributes by their column index
         # If index is not None, means that the node is not a leaf node. Compare on the index when classifying.
-        index, choice = get_split_index(input_data, attributes, split_on, pure_split)
+        index, choice = get_split_index(input_data, attributes, split_on, expand)
 
         if index < 0:
             node.label = get_mode_label(input_data)
@@ -228,12 +229,12 @@ def build_tree(input_data, attributes, split_on, pure_split, pruning_size=5):
                                        attributes=attributes,
                                        pruning_size=pruning_size,
                                        split_on=split_on,
-                                       pure_split=pure_split)
+                                       expand=expand)
                 node.right = build_tree(input_data=data_right,
                                         attributes=attributes,
                                         pruning_size=pruning_size,
                                         split_on=split_on,
-                                        pure_split=pure_split)
+                                        expand=expand)
 
     return node
 
@@ -342,14 +343,14 @@ def discretize_data(inputs, no_of_bins):
 
 
 def run_algorithm(data_set=1, split_value=0.85, shuffle=True, measure=ImpurityMeasure.CL_ERROR, no_of_bins=5,
-                  pure_split=False):
+                  expand=False):
     """
 
     :param data_set: The input data file
     :param split_value: The percentage of data to use as training data and testing data
     :param shuffle: Whether to shuffle the data or not.
     :param measure: The Impurity Measure to use
-    :param pure_split: Whether to furthur split nominal attributes until no choices are left.
+    :param expand: Whether to furthur split nominal attributes until no choices are left.
                     ( ABC ) -> ( A,BC) -> (B,C)
     :param no_of_bins: The number of partitions to make of the data while discretizing
     :return: None
@@ -373,7 +374,7 @@ def run_algorithm(data_set=1, split_value=0.85, shuffle=True, measure=ImpurityMe
     root = build_tree(input_data=training_data,
                       attributes=attributes,
                       split_on=measure,
-                      pure_split=pure_split)
+                      expand=expand)
 
     true_positives, false_negatives, false_positives, true_negatives = classify_testing_data(root=copy.deepcopy(root),
                                                                                              input_data=testing_data)
@@ -382,9 +383,9 @@ def run_algorithm(data_set=1, split_value=0.85, shuffle=True, measure=ImpurityMe
 
 
 if __name__ == '__main__':
-    run_algorithm(data_set=5,
+    run_algorithm(data_set=1,
                   shuffle=False,
-                  split_value=0.60,
+                  split_value=0.80,
                   no_of_bins=10,
-                  pure_split=True,
+                  expand=True,
                   measure=ImpurityMeasure.GINI)
