@@ -44,16 +44,17 @@ def split_data(data, split_value=0.85):
 
 
 # TODO: Check if absolutely necessary
-def normalize_data(inputs):
+def normalize_data(inputs, attributes):
     for j in range(len(inputs[0].data)):
 
-        min_elem, max_elem = None, None
-        for i in range(len(inputs)):
-            if min_elem is None:
-                min_elem = min(list(zip(*[x.data for x in inputs]))[j])
-                max_elem = max(list(zip(*[x.data for x in inputs]))[j])
-            # http://stats.stackexchange.com/a/70807
-            inputs[i].data[j] = (inputs[i].data[j] - min_elem) / (max_elem - min_elem)
+        if attributes[j].type == 'Continuous':
+            min_elem, max_elem = None, None
+            for i in range(len(inputs)):
+                if min_elem is None:
+                    min_elem = min(list(zip(*[x.data for x in inputs]))[j])
+                    max_elem = max(list(zip(*[x.data for x in inputs]))[j])
+                # http://stats.stackexchange.com/a/70807
+                inputs[i].data[j] = (inputs[i].data[j] - min_elem) / (max_elem - min_elem)
 
     pass
 
@@ -83,7 +84,6 @@ def get_split_index(input_data, attributes, split_on=SplitAlgo.CLERROR):
     min_measure = 1
     nominal_choice = None
 
-
     for i in range(len(attributes)):
 
         if i not in indexed_attributes:
@@ -93,7 +93,12 @@ def get_split_index(input_data, attributes, split_on=SplitAlgo.CLERROR):
                 inputs_left = [x.truth for x in input_data if x.data[i] < attributes[i].median]
                 inputs_right = [x.truth for x in input_data if x.data[i] >= attributes[i].median]
 
-                if split_on == SplitAlgo.CLERROR:
+                if len(inputs_right) == 0 or len(inputs_left) == 0:
+                    index = i
+                    nominal_choice = temp_choice
+                    break
+
+                elif split_on == SplitAlgo.CLERROR:
                     split_measure = get_classification_error_for_split(inputs_left, inputs_right)
                 elif split_on == SplitAlgo.GINI:
                     split_measure = get_gini_error_for_split(inputs_left, inputs_right)
@@ -236,7 +241,11 @@ def classify_testing_data(root, input_data, attributes):
 
 def calculate_statistics(a, b, c, d):
     accuracy = (a + d) / (a + b + c + d)
-    precision = a / (a + c)
+
+    if (a + c) != 0:
+        precision = a / (a + c)
+    else:
+        precision = 'No Positives Classified'
     recall = a / (a + b)
     f_measure = 2 * a / (2 * a + b + c)
 
@@ -252,7 +261,8 @@ def run_algorithm(data_set=1, normalization=True, split_value=0.85, shuffle=True
     if shuffle:
         random.shuffle(data)
     if normalization:
-        normalize_data(data)
+        attributes = get_attributes(data)
+        normalize_data(data, attributes)
 
     attributes = get_attributes(data)
     training_data, testing_data = split_data(data, split_value=split_value)
@@ -266,8 +276,8 @@ def run_algorithm(data_set=1, normalization=True, split_value=0.85, shuffle=True
     calculate_statistics(a, b, c, d)
 
 
-run_algorithm(data_set=2,
+run_algorithm(data_set=1,
               normalization=False,
               shuffle=False,
-              split_value=0.90,
+              split_value=0.80,
               split_on=SplitAlgo.CLERROR)
