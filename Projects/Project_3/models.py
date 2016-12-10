@@ -1,10 +1,12 @@
 class TreeNode:
     def __init__(self):
-        self.left = None  # Left Node
-        self.right = None  # Right Node
-        self.label = None  # If a node has a label, it is a root node.
-        self.index = None  # Index of the attribute being split on.
-        self.choice = None  # The attribute being split on. E.g 'hot' or 'rain'
+        self.label = None  # If a node has a label, it is a leaf node.
+        self.branches = []
+        self.attribute_index = None
+        self.attribute_value = None
+
+    def add_child(self, obj):
+        self.branches.append(obj)
 
 
 class DataRow:

@@ -5,7 +5,7 @@ from statistics import mode, StatisticsError
 
 from Projects.Project_3.models import DataRow, TreeNode, Column, ImpurityMeasure
 
-indexed_attributes = []
+columns = []
 
 depth = 0
 
@@ -132,6 +132,26 @@ def get_gini_error_for_split(inputs_left, inputs_right):
     return min(get_gini_error(inputs_left), get_gini_error(inputs_right))
 
 
+def get_entropy(inputs):
+    """
+    Get error using the GINI Error measure for a given dataset
+    :param inputs: the dataset
+    :return: GINI Error
+    """
+    positives = inputs.count(1.0)
+    negatives = len(inputs) - positives
+    total = len(inputs)
+
+    if positives == 0 or negatives == 0:
+        return 0
+    else:
+
+        entropy = -(positives / total) * math.log(positives / total, 2) - (negatives / total) * math.log(
+            negatives / total, 2)
+
+        return entropy
+
+
 def get_split_index(input_data, attributes, measure=ImpurityMeasure.CL_ERROR, expand=False):
     """
     Returns the index of the attribute to split on. We're using indexes as we don't have labels.
@@ -184,72 +204,82 @@ def get_split_index(input_data, attributes, measure=ImpurityMeasure.CL_ERROR, ex
     return index, nominal_choice
 
 
-def get_mode_label(input_data):
+def get_majority_label(input_data):
     try:
         return mode([x.truth for x in input_data])
     except StatisticsError:
         return [x.truth for x in input_data].pop()
 
 
-def build_tree(input_data, attributes, split_on, expand, pruning_size=5):
+def get_information_gain(input_data, attribute_index):
+    subset_entropy = 0
+    for choice in columns[attribute_index].choices:
+        input_data_subset = [x for x in input_data if x.data[attribute_index] == choice]
+
+        subset_entropy += (len(input_data_subset) / len(input_data)) * get_entropy(input_data_subset)
+
+    return get_entropy(input_data) - subset_entropy
+
+
+def get_best_attribute_index(input_data, attribute_list):
+    input_data = input_data[:]
+    best_gain = 0
+    best_attr = -1
+
+    for attribute_index in attribute_list:
+        temp_gain = get_information_gain(input_data, attribute_index)
+
+        if temp_gain >= best_gain:
+            best_gain = temp_gain
+            best_attr = attribute_index
+
+    return best_attr
+
+
+def build_tree(input_data, attributes_list):
     classes = set([x.truth for x in input_data])
 
-    node = TreeNode()
+    root = TreeNode()
 
-    # Pruning
     # Stop if all instances belong to the same class
     if len(classes) == 1:
-        node.label = classes.pop()
-
-    # Stop if number of instances is less than some user specified threshold
-    elif len(input_data) < pruning_size:
-        node.label = get_mode_label(input_data)
-
+        root.label = classes.pop()
+    elif len(attributes_list) == 0:
+        root.label = get_majority_label(input_data)
     else:
+        attribute_index = get_best_attribute_index(input_data, attributes_list)
 
-        # Because we don't have column headings. Keeping track of attributes by their column index
-        # If index is not None, means that the node is not a leaf node. Compare on the index when classifying.
-        index, choice = get_split_index(input_data, attributes, split_on, expand)
+        root.attribute_index = attribute_index
 
-        if index < 0:
-            node.label = get_mode_label(input_data)
-        else:
-            node.index = index
-            node.choice = choice
+        for choice in columns[attribute_index].choices:
+            branch = TreeNode()
 
-            data_left = [x for x in input_data if x.data[node.index] != choice]
-            data_right = [x for x in input_data if x.data[node.index] == choice]
+            choice_subset = [x for x in input_data if x.data[attribute_index] == choice]
 
-            if len(data_left) == 0:
-                node.label = get_mode_label(data_right)
-            elif len(data_right) == 0:
-                node.label = get_mode_label(data_left)
+            if len(choice_subset) == 0:
+                branch.label = get_majority_label(input_data)
+                branch.attribute_value = choice
             else:
-                node.left = build_tree(input_data=data_left,
-                                       attributes=attributes,
-                                       pruning_size=pruning_size,
-                                       split_on=split_on,
-                                       expand=expand)
-                node.right = build_tree(input_data=data_right,
-                                        attributes=attributes,
-                                        pruning_size=pruning_size,
-                                        split_on=split_on,
-                                        expand=expand)
+                branch = build_tree(choice_subset, [x for x in attributes_list if x != attribute_index])
+                branch.attribute_value = choice
+            root.add_child(branch)
 
-    return node
+    return root
 
 
-def get_attributes(inputs):
+def get_columns(inputs):
     """
     Find column properties and append Column object to an array.
     :param inputs: The input dataset
     :return: Array of Column objects
     """
-    array = []
+    global columns
     for i in range(len(inputs[0].data)):
-        array.append(Column(list(zip(*[x.data for x in inputs]))[i]))
+        columns.append(Column(list(zip(*[x.data for x in inputs]))[i]))
 
-    return array
+
+def classify_record(root, record):
+    pass
 
 
 def classify_testing_data(root, input_data):
@@ -260,51 +290,32 @@ def classify_testing_data(root, input_data):
     :return: Estimation measures
     """
 
-    true_positives, false_negatives, false_positives, true_negatives = 0, 0, 0, 0
+    tp, fn, fp, tn = 0, 0, 0, 0
 
-    for row in input_data:
+    for record in input_data:
         node = copy.deepcopy(root)
-        while node.label is None:
-            index, choice = node.index, node.choice
+        classify_record(root=node, record=record)
 
-            if row.data[index] != choice:
-                node = node.left
-            else:
-                node = node.right
-
-        if row.truth == node.label:
-
-            if node.label == 1.0:
-                true_positives += 1
-            else:
-                true_negatives += 1
-        else:
-
-            if node.label == 1.0:
-                false_positives += 1
-            else:
-                false_negatives += 1
-
-    return true_positives, false_negatives, false_positives, true_negatives
+    return tp, fn, fp, tn
 
 
-def calculate_statistics(a, b, c, d):
+def calculate_statistics(tp, fn, fp, tn):
     """
     Calculate the metrics for Performance Evaluation
-    :param a: True Positives
-    :param b: False Negatives
-    :param c: False Positives
-    :param d: True Negatives
+    :param tp: True Positives
+    :param fn: False Negatives
+    :param fp: False Positives
+    :param tn: True Negatives
     :return: None
     """
-    accuracy = (a + d) / (a + b + c + d)
+    accuracy = (tp + tn) / (tp + fn + fp + tn)
 
-    if (a + c) != 0:
-        precision = a / (a + c)
+    if (tp + fp) != 0:
+        precision = tp / (tp + fp)
     else:
         precision = 'No Positives Classified'
-    recall = a / (a + b)
-    f_measure = 2 * a / (2 * a + b + c)
+    recall = tp / (tp + fn)
+    f_measure = 2 * tp / (2 * tp + fn + fp)
 
     print('Accuracy : {}'.format(accuracy))
     print('Precision : {}'.format(precision))
@@ -368,24 +379,19 @@ def run_algorithm(data_set=1, split_value=0.85, shuffle=True, measure=ImpurityMe
     normalize_data(data)
     discretize_data(data, no_of_bins)
 
-    attributes = get_attributes(data)
+    get_columns(data)
     training_data, testing_data = split_data(data, split_value=split_value)
 
-    root = build_tree(input_data=training_data,
-                      attributes=attributes,
-                      split_on=measure,
-                      expand=expand)
+    root = build_tree(training_data, range(len(columns)))
+    tp, fn, fp, tn = classify_testing_data(root=root, input_data=testing_data)
 
-    true_positives, false_negatives, false_positives, true_negatives = classify_testing_data(root=copy.deepcopy(root),
-                                                                                             input_data=testing_data)
-
-    calculate_statistics(true_positives, false_negatives, false_positives, true_negatives)
+    calculate_statistics(tp, fn, fp, tn)
 
 
 if __name__ == '__main__':
-    run_algorithm(data_set=1,
+    run_algorithm(data_set=4,
                   shuffle=False,
                   split_value=0.80,
                   no_of_bins=10,
                   expand=True,
-                  measure=ImpurityMeasure.GINI)
+                  measure=ImpurityMeasure.ENTROPY)
