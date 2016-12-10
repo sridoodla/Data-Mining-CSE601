@@ -43,7 +43,7 @@ def read_file(data_set=1):
 
 def split_data(data, split_value=0.85):
     """
-    Using this function to split our data into training and testing data-sets
+    Splits the data into training and testing data-sets
     :param data: The input data
     :param split_value: The % of data to use as testing data
     :return: Training data and Testing Data
@@ -55,7 +55,7 @@ def split_data(data, split_value=0.85):
 
 def normalize_data(inputs):
     """
-    Normalize the data into a 0-1 range.
+    Normalizes the data into a 0-1 range.
     :param inputs: The input data
     :type inputs : list
     :return:
@@ -70,34 +70,6 @@ def normalize_data(inputs):
                     max_elem = max(list(zip(*[x.data for x in inputs]))[j])
                 # http://stats.stackexchange.com/a/70807
                 inputs[i].data[j] = (inputs[i].data[j] - min_elem) / (max_elem - min_elem)
-
-
-def get_gini_error(inputs):
-    """
-    Get error using the GINI Error measure for a given dataset
-    :param inputs: the dataset
-    :return: GINI Error
-    """
-    positives = inputs.count(1.0)
-    negatives = len(inputs) - positives
-    total = len(inputs)
-
-    if total:
-        gini_error = 1 - (positives / total) ** 2 - (negatives / total) ** 2
-        return gini_error
-    else:
-        return 0
-
-
-def get_gini_error_for_split(inputs_left, inputs_right):
-    """
-    Return the minimum GINI error value for a split.
-    :param inputs_left: Left Dataset
-    :param inputs_right: Right Dataset
-    :return:
-    """
-
-    return min(get_gini_error(inputs_left), get_gini_error(inputs_right))
 
 
 def get_entropy(inputs):
@@ -154,10 +126,13 @@ def get_best_attribute_index(input_data, attribute_list):
     return best_attr
 
 
-def build_tree(input_data, attributes_list):
+def build_tree(input_data, attributes_list, prune=True):
     classes = set([x.truth for x in input_data])
 
     root = TreeNode()
+
+    if prune:
+        pass
 
     # Stop if all instances belong to the same class
     if len(classes) == 1:
