@@ -1,13 +1,10 @@
 import copy
 import math
-import random
 from statistics import mode, StatisticsError
 
 from Projects.Project_3.models import DataRow, TreeNode, Column, ImpurityMeasure
 
 columns = []
-
-depth = 0
 
 
 def read_file(data_set=1):
@@ -74,35 +71,6 @@ def normalize_data(inputs):
                 # http://stats.stackexchange.com/a/70807
                 inputs[i].data[j] = (inputs[i].data[j] - min_elem) / (max_elem - min_elem)
 
-    pass
-
-
-def get_classification_error(inputs):
-    """
-    Get error using the Classification Error Measure for a given dataset
-    :param inputs: The dataset
-    :return: Classification Error
-    """
-    positives = inputs.count(1.0)
-    negatives = len(inputs) - positives
-    total = len(inputs)
-
-    if total:
-        classification_error = 1 - max(positives, negatives) / total
-        return classification_error
-    else:
-        return 1
-
-
-def get_classification_error_for_split(inputs_left, inputs_right):
-    """
-    Return the minimum classification error for a split.
-    :param inputs_left: Left Dataset
-    :param inputs_right: Right Dataset
-    :return:
-    """
-    return min(get_classification_error(inputs_left), get_classification_error(inputs_right))
-
 
 def get_gini_error(inputs):
     """
@@ -152,58 +120,6 @@ def get_entropy(inputs):
         return entropy
 
 
-def get_split_index(input_data, attributes, measure=ImpurityMeasure.CL_ERROR, expand=False):
-    """
-    Returns the index of the attribute to split on. We're using indexes as we don't have labels.
-    :param input_data: The input dataset
-    :param attributes: Array of Column objects
-    :param measure: The measure to use while calculating error
-    :param expand: Whether to expand on the remaining attributes once one of them is already selected
-    :return: Index of the attribute to split on
-    """
-
-    index, nominal_choice = -1, None
-
-    # 1 because it is higher than maximum value possible.
-    # So regardless of our calculated error, it will be assigned to min_error
-    min_measure = 1
-
-    for i in range(len(attributes)):
-
-        if i not in indexed_attributes:
-            temp_choice, temp_min_measure = None, 1
-
-            choices = attributes[i].choices
-
-            for choice in choices:
-                inputs_left = [x.truth for x in input_data if x.data[i] != choice]
-                inputs_right = [x.truth for x in input_data if x.data[i] == choice]
-
-                if measure == ImpurityMeasure.CL_ERROR:
-                    split_measure = get_classification_error_for_split(inputs_left, inputs_right)
-                elif measure == ImpurityMeasure.GINI:
-                    split_measure = get_gini_error_for_split(inputs_left, inputs_right)
-
-                if split_measure < temp_min_measure:
-                    temp_min_measure = split_measure
-                    temp_choice = choice
-
-            if temp_min_measure < min_measure:
-                min_measure = temp_min_measure
-                nominal_choice = temp_choice
-                index = i
-
-    if len(indexed_attributes) < len(attributes):
-        indexed_attributes.append(index)
-
-        if expand:
-            attributes[index].choices.remove(nominal_choice)
-            if len(attributes[index].choices) != 1:
-                indexed_attributes.remove(index)
-
-    return index, nominal_choice
-
-
 def get_majority_label(input_data):
     try:
         return mode([x.truth for x in input_data])
@@ -214,22 +130,24 @@ def get_majority_label(input_data):
 def get_information_gain(input_data, attribute_index):
     subset_entropy = 0
     for choice in columns[attribute_index].choices:
-        input_data_subset = [x for x in input_data if x.data[attribute_index] == choice]
+        input_data_subset = [x.truth for x in input_data if x.data[attribute_index] == choice]
 
         subset_entropy += (len(input_data_subset) / len(input_data)) * get_entropy(input_data_subset)
+
+    input_data = [x.truth for x in input_data]
 
     return get_entropy(input_data) - subset_entropy
 
 
 def get_best_attribute_index(input_data, attribute_list):
     input_data = input_data[:]
-    best_gain = 0
+    best_gain = -1
     best_attr = -1
 
     for attribute_index in attribute_list:
         temp_gain = get_information_gain(input_data, attribute_index)
 
-        if temp_gain >= best_gain:
+        if temp_gain > best_gain:
             best_gain = temp_gain
             best_attr = attribute_index
 
@@ -279,7 +197,16 @@ def get_columns(inputs):
 
 
 def classify_record(root, record):
-    pass
+    if root.label is not None:
+        return root.label
+
+    index = root.attribute_index
+
+    branches = root.branches
+
+    for branch in branches:
+        if branch.attribute_value == record.data[index]:
+            return classify_record(root=branch, record=record)
 
 
 def classify_testing_data(root, input_data):
@@ -292,9 +219,25 @@ def classify_testing_data(root, input_data):
 
     tp, fn, fp, tn = 0, 0, 0, 0
 
+    predictions = []
     for record in input_data:
         node = copy.deepcopy(root)
-        classify_record(root=node, record=record)
+        predictions.append(classify_record(root=node, record=record))
+
+    for prediction, record in zip(predictions, input_data):
+
+        if prediction == record.truth:
+
+            if prediction == 1:
+                tp += 1
+            else:
+                tn += 1
+        else:
+
+            if prediction == 1:
+                fp += 1
+            else:
+                fn += 1
 
     return tp, fn, fp, tn
 
@@ -353,8 +296,7 @@ def discretize_data(inputs, no_of_bins):
                         break
 
 
-def run_algorithm(data_set=1, split_value=0.85, shuffle=True, measure=ImpurityMeasure.CL_ERROR, no_of_bins=5,
-                  expand=False):
+def run_algorithm(data_set=1, split_value=0.85, no_of_bins=5):
     """
 
     :param data_set: The input data file
@@ -373,9 +315,6 @@ def run_algorithm(data_set=1, split_value=0.85, shuffle=True, measure=ImpurityMe
 
     data = read_file(data_set)
 
-    if shuffle:
-        random.shuffle(data)
-
     normalize_data(data)
     discretize_data(data, no_of_bins)
 
@@ -390,8 +329,5 @@ def run_algorithm(data_set=1, split_value=0.85, shuffle=True, measure=ImpurityMe
 
 if __name__ == '__main__':
     run_algorithm(data_set=4,
-                  shuffle=False,
                   split_value=0.80,
-                  no_of_bins=10,
-                  expand=True,
-                  measure=ImpurityMeasure.ENTROPY)
+                  no_of_bins=5)
