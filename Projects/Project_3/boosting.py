@@ -1,4 +1,4 @@
-from random import randint, shuffle
+from random import randint
 
 from Projects.Project_3.decision_trees import *
 from Projects.Project_3.models import Classifier
@@ -91,6 +91,10 @@ def boost(data_set=1, num_of_bins=5, num_of_classifiers=5, split_value=0.6):
 
         if error < 0.5:
             i += 1
+
+            if error == 0:
+                classifiers.append(classifier)
+                break
             classifier.weight = math.log((1 - error) / error)
 
             for prediction, record in zip(predictions, d1):
