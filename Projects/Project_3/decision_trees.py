@@ -2,7 +2,7 @@ import copy
 import math
 from statistics import mode, StatisticsError
 
-from Projects.Project_3.models import DataRow, TreeNode, Column, ImpurityMeasure
+from Projects.Project_3.models import DataRow, TreeNode, Column
 
 columns = []
 
@@ -296,29 +296,31 @@ def discretize_data(inputs, no_of_bins):
                         break
 
 
-def run_algorithm(data_set=1, split_value=0.85, no_of_bins=5):
+def get_standardized_data(data_set, num_of_bins):
+    data = read_file(data_set)
+    normalize_data(data)
+    discretize_data(data, num_of_bins)
+
+    get_columns(data)
+
+    return data
+
+
+def run_algorithm(data_set=1, split_value=0.85, num_of_bins=5):
     """
 
     :param data_set: The input data file
     :param split_value: The percentage of data to use as training data and testing data
-    :param shuffle: Whether to shuffle the data or not.
-    :param measure: The Impurity Measure to use
-    :param expand: Whether to furthur split nominal attributes until no choices are left.
-                    ( ABC ) -> ( A,BC) -> (B,C)
-    :param no_of_bins: The number of partitions to make of the data while discretizing
+    :param num_of_bins: The number of partitions to make of the data while discretizing
     :return: None
     """
 
-    assert no_of_bins > 1, "Number of Bins should be greater than 1"
+    assert num_of_bins > 1, "Number of Bins should be greater than 1"
     assert split_value > 0.5, "Testing data cannot be larger than training data"
     assert data_set in [1, 2, 4], "No such data-set exists"
 
-    data = read_file(data_set)
+    data = get_standardized_data(data_set, num_of_bins)
 
-    normalize_data(data)
-    discretize_data(data, no_of_bins)
-
-    get_columns(data)
     training_data, testing_data = split_data(data, split_value=split_value)
 
     root = build_tree(training_data, range(len(columns)))
@@ -330,4 +332,4 @@ def run_algorithm(data_set=1, split_value=0.85, no_of_bins=5):
 if __name__ == '__main__':
     run_algorithm(data_set=4,
                   split_value=0.80,
-                  no_of_bins=5)
+                  num_of_bins=5)

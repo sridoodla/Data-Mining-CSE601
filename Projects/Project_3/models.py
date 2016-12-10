@@ -18,9 +18,3 @@ class DataRow:
 class Column:
     def __init__(self, data):
         self.choices = list(set(data))
-
-
-class ImpurityMeasure:
-    GINI = 'GINI'
-    CL_ERROR = 'Classification Error'
-    ENTROPY = 'Entropy & Information Gain'
