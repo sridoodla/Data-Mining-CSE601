@@ -1,16 +1,19 @@
 import copy
 import math
-import random
 from statistics import mode, StatisticsError
 
-from Projects.Project_3.models import DataRow, TreeNode, DataColumn, SplitAlgo
+from Projects.Project_3.models import DataRow, TreeNode, Column
 
-indexed_attributes = []
-
-depth = 0
+columns = []
 
 
-def load_data(data_set=1):
+def read_file(data_set=1):
+    """
+    Read and parse the data set
+    :param data_set: File Number
+    :type data_set: int
+    :return: Array of DataRow (s)
+    """
     path = 'data/project3_dataset{}.txt'.format(data_set)
 
     array = []
@@ -26,7 +29,8 @@ def load_data(data_set=1):
         for row in file:
             data = row.split('\t')
 
-            # As everything is in string, type cast to Float
+            # As everything is in string, type cast to Float if it is a number.
+            # If it's a string, it's a nominal type
             data = [float(x) if is_number(x) else x for x in data]
 
             # Making it an object here as it will be easier ahead.
@@ -38,16 +42,27 @@ def load_data(data_set=1):
 
 
 def split_data(data, split_value=0.85):
+    """
+    Using this function to split our data into training and testing data-sets
+    :param data: The input data
+    :param split_value: The % of data to use as testing data
+    :return: Training data and Testing Data
+    """
     training_set = math.floor(split_value * len(data))
 
     return data[:training_set], data[training_set:]
 
 
-# TODO: Check if absolutely necessary
-def normalize_data(inputs, attributes):
+def normalize_data(inputs):
+    """
+    Normalize the data into a 0-1 range.
+    :param inputs: The input data
+    :type inputs : list
+    :return:
+    """
     for j in range(len(inputs[0].data)):
 
-        if attributes[j].type == 'Continuous':
+        if type(inputs[0].data[j]) is not str:
             min_elem, max_elem = None, None
             for i in range(len(inputs)):
                 if min_elem is None:
@@ -56,198 +71,194 @@ def normalize_data(inputs, attributes):
                 # http://stats.stackexchange.com/a/70807
                 inputs[i].data[j] = (inputs[i].data[j] - min_elem) / (max_elem - min_elem)
 
-    pass
 
-
-def get_classification_error(inputs):
+def get_gini_error(inputs):
+    """
+    Get error using the GINI Error measure for a given dataset
+    :param inputs: the dataset
+    :return: GINI Error
+    """
     positives = inputs.count(1.0)
     negatives = len(inputs) - positives
-    classification_error = 1 - max(positives, negatives) / len(inputs)
+    total = len(inputs)
 
-    return classification_error
-
-
-def get_classification_error_for_split(inputs_left, inputs_right):
-    return min(get_classification_error(inputs_left),
-               get_classification_error(inputs_right))
-
-
-def get_gini_error_for_split(inputs_left, inputs_right, total):
-    return 0
+    if total:
+        gini_error = 1 - (positives / total) ** 2 - (negatives / total) ** 2
+        return gini_error
+    else:
+        return 0
 
 
-def get_split_index(input_data, attributes, split_on=SplitAlgo.CLERROR):
-    index = -1
+def get_gini_error_for_split(inputs_left, inputs_right):
+    """
+    Return the minimum GINI error value for a split.
+    :param inputs_left: Left Dataset
+    :param inputs_right: Right Dataset
+    :return:
+    """
 
-    # 1 because it is higher than maximum value possible.
-    # So regardless of our calculated error, it will be assigned to min_error
-    min_measure = 1
-    nominal_choice = None
-
-    for i in range(len(attributes)):
-
-        if i not in indexed_attributes:
-            temp_choice = None
-
-            if attributes[i].type == 'Continuous':
-                inputs_left = [x.truth for x in input_data if x.data[i] < attributes[i].median]
-                inputs_right = [x.truth for x in input_data if x.data[i] >= attributes[i].median]
-
-                if len(inputs_right) == 0 or len(inputs_left) == 0:
-                    index = i
-                    nominal_choice = temp_choice
-                    break
-
-                elif split_on == SplitAlgo.CLERROR:
-                    split_measure = get_classification_error_for_split(inputs_left, inputs_right)
-                elif split_on == SplitAlgo.GINI:
-                    split_measure = get_gini_error_for_split(inputs_left, inputs_right)
-            else:
-                choices = attributes[i].choices
-
-                temp_min_measure = 1
-                for choice in choices:
-                    inputs_left = [x.truth for x in input_data if x.data[i] != choice]
-                    inputs_right = [x.truth for x in input_data if x.data[i] == choice]
-
-                    if split_on == SplitAlgo.CLERROR:
-                        split_measure = get_classification_error_for_split(inputs_left, inputs_right)
-                    elif split_on == SplitAlgo.GINI:
-                        split_measure = get_gini_error_for_split(inputs_left, inputs_right)
-
-                    if split_measure < temp_min_measure:
-                        temp_min_measure = split_measure
-                        temp_choice = choice
-
-                split_measure = temp_min_measure
-
-            if split_measure < min_measure:
-                min_measure = split_measure
-                nominal_choice = temp_choice
-                index = i
-
-                if nominal_choice is not None:
-                    attributes[index].choices.remove(nominal_choice)
-
-    indexed_attributes.append(index)
-
-    if attributes[index].choices is not None:
-        if len(attributes[index].choices) > 1:
-            indexed_attributes.remove(index)
-
-    return index, nominal_choice
+    return min(get_gini_error(inputs_left), get_gini_error(inputs_right))
 
 
-def get_mode_label(input_data):
+def get_entropy(inputs):
+    """
+    Get error using the GINI Error measure for a given dataset
+    :param inputs: the dataset
+    :return: GINI Error
+    """
+    positives = inputs.count(1.0)
+    negatives = len(inputs) - positives
+    total = len(inputs)
+
+    if positives == 0 or negatives == 0:
+        return 0
+    else:
+
+        entropy = -(positives / total) * math.log(positives / total, 2) - (negatives / total) * math.log(
+            negatives / total, 2)
+
+        return entropy
+
+
+def get_majority_label(input_data):
     try:
         return mode([x.truth for x in input_data])
     except StatisticsError:
         return [x.truth for x in input_data].pop()
 
 
-def build_tree(input_data, attributes, split_on, pruning_size=5):
+def get_information_gain(input_data, attribute_index):
+    subset_entropy = 0
+    for choice in columns[attribute_index].choices:
+        input_data_subset = [x.truth for x in input_data if x.data[attribute_index] == choice]
+
+        subset_entropy += (len(input_data_subset) / len(input_data)) * get_entropy(input_data_subset)
+
+    input_data = [x.truth for x in input_data]
+
+    return get_entropy(input_data) - subset_entropy
+
+
+def get_best_attribute_index(input_data, attribute_list):
+    input_data = input_data[:]
+    best_gain = -1
+    best_attr = -1
+
+    for attribute_index in attribute_list:
+        temp_gain = get_information_gain(input_data, attribute_index)
+
+        if temp_gain > best_gain:
+            best_gain = temp_gain
+            best_attr = attribute_index
+
+    return best_attr
+
+
+def build_tree(input_data, attributes_list):
     classes = set([x.truth for x in input_data])
 
-    node = TreeNode()
-    node.count = len(input_data)
-    # Pruning
+    root = TreeNode()
 
     # Stop if all instances belong to the same class
     if len(classes) == 1:
-        node.label = classes.pop()
-
-    # Stop if number of instances is less than some user specified threshold
-    elif len(input_data) < pruning_size:
-        node.label = get_mode_label(input_data)
-
+        root.label = classes.pop()
+    elif len(attributes_list) == 0:
+        root.label = get_majority_label(input_data)
     else:
+        attribute_index = get_best_attribute_index(input_data, attributes_list)
 
-        # Because we don't have column headings. Keeping track of attributes by their column index
-        # If index is not None, means that the node is not a leaf node. Compare on the index when classifying.
-        index, choice = get_split_index(input_data, attributes, split_on)
+        root.attribute_index = attribute_index
 
-        if index < 0:
-            node.label = get_mode_label(input_data)
-        else:
-            node.index = index
-            node.choice = choice
+        for choice in columns[attribute_index].choices:
+            branch = TreeNode()
 
-            if choice is None:
-                data_left = [x for x in input_data if x.data[node.index] < attributes[node.index].median]
-                data_right = [x for x in input_data if x.data[node.index] >= attributes[node.index].median]
+            choice_subset = [x for x in input_data if x.data[attribute_index] == choice]
+
+            if len(choice_subset) == 0:
+                branch.label = get_majority_label(input_data)
+                branch.attribute_value = choice
             else:
-                data_left = [x for x in input_data if x.data[node.index] != choice]
-                data_right = [x for x in input_data if x.data[node.index] == choice]
+                branch = build_tree(choice_subset, [x for x in attributes_list if x != attribute_index])
+                branch.attribute_value = choice
+            root.add_child(branch)
 
-            if len(data_left) == 0:
-                node.label = get_mode_label(data_right)
-            elif len(data_right) == 0:
-                node.label = get_mode_label(data_left)
-            else:
-                node.left = build_tree(input_data=data_left,
-                                       attributes=attributes,
-                                       pruning_size=pruning_size,
-                                       split_on=split_on)  # TODO: Check if attributes need to be regenerated
-                node.right = build_tree(input_data=data_right,
-                                        attributes=attributes,
-                                        pruning_size=pruning_size,
-                                        split_on=split_on)
-
-    return node
+    return root
 
 
-def get_attributes(inputs):
-    array = []
+def get_columns(inputs):
+    """
+    Find column properties and append Column object to an array.
+    :param inputs: The input dataset
+    :return: Array of Column objects
+    """
+    global columns
     for i in range(len(inputs[0].data)):
-        array.append(DataColumn(list(zip(*[x.data for x in inputs]))[i]))
-
-    return array
+        columns.append(Column(list(zip(*[x.data for x in inputs]))[i]))
 
 
-def classify_testing_data(root, input_data, attributes):
-    a, b, c, d = 0, 0, 0, 0
+def classify_record(root, record):
+    if root.label is not None:
+        return root.label
 
-    for input in input_data:
+    index = root.attribute_index
+
+    branches = root.branches
+
+    for branch in branches:
+        if branch.attribute_value == record.data[index]:
+            return classify_record(root=branch, record=record)
+
+
+def classify_testing_data(root, input_data):
+    """
+    Classify the testing data using the Decision Tree we built
+    :param root: The root of the decision tree
+    :param input_data: The testing data-set
+    :return: Estimation measures
+    """
+
+    tp, fn, fp, tn = 0, 0, 0, 0
+
+    predictions = []
+    for record in input_data:
         node = copy.deepcopy(root)
-        while node.label is None:
-            index, choice = node.index, node.choice
+        predictions.append(classify_record(root=node, record=record))
 
-            if choice is None:
-                if input.data[index] < attributes[index].median:
-                    node = node.left
-                else:
-                    node = node.right
+    for prediction, record in zip(predictions, input_data):
+
+        if prediction == record.truth:
+
+            if prediction == 1:
+                tp += 1
             else:
-                if input.data[index] != choice:
-                    node = node.left
-                else:
-                    node = node.right
-
-        if input.truth == node.label:
-
-            if node.label == 1.0:
-                a += 1
-            else:
-                d += 1
+                tn += 1
         else:
 
-            if node.label == 1.0:
-                c += 1
+            if prediction == 1:
+                fp += 1
             else:
-                b += 1
+                fn += 1
 
-    return a, b, c, d
+    return tp, fn, fp, tn
 
 
-def calculate_statistics(a, b, c, d):
-    accuracy = (a + d) / (a + b + c + d)
+def calculate_statistics(tp, fn, fp, tn):
+    """
+    Calculate the metrics for Performance Evaluation
+    :param tp: True Positives
+    :param fn: False Negatives
+    :param fp: False Positives
+    :param tn: True Negatives
+    :return: None
+    """
+    accuracy = (tp + tn) / (tp + fn + fp + tn)
 
-    if (a + c) != 0:
-        precision = a / (a + c)
+    if (tp + fp) != 0:
+        precision = tp / (tp + fp)
     else:
         precision = 'No Positives Classified'
-    recall = a / (a + b)
-    f_measure = 2 * a / (2 * a + b + c)
+    recall = tp / (tp + fn)
+    f_measure = 2 * tp / (2 * tp + fn + fp)
 
     print('Accuracy : {}'.format(accuracy))
     print('Precision : {}'.format(precision))
@@ -255,29 +266,70 @@ def calculate_statistics(a, b, c, d):
     print('F-Measure : {}'.format(f_measure))
 
 
-def run_algorithm(data_set=1, normalization=True, split_value=0.85, shuffle=True, split_on=SplitAlgo.CLERROR):
-    data = load_data(data_set)
+def discretize_data(inputs, no_of_bins):
+    """
+    This function converts our continuous data into "bins" based on the number of partitons
+    :param inputs: The input dataset
+    :param no_of_bins: The number of intervals
+    :return: None
+    """
+    # Loop through columns
+    for j in range(len(inputs[0].data)):
 
-    if shuffle:
-        random.shuffle(data)
-    if normalization:
-        attributes = get_attributes(data)
-        normalize_data(data, attributes)
+        if type(inputs[0].data[j]) is not str:
+            min_elem, max_elem = None, None
 
-    attributes = get_attributes(data)
+            # Loop through rows
+            for i in range(len(inputs)):
+
+                # Calculate min and max of the column
+                if min_elem is None:
+                    min_elem = min(list(zip(*[x.data for x in inputs]))[j])
+                    max_elem = max(list(zip(*[x.data for x in inputs]))[j])
+
+                bin_width = (max_elem - min_elem) / no_of_bins
+
+                for p in range(1, no_of_bins + 1):
+
+                    if inputs[i].data[j] <= p * bin_width:
+                        inputs[i].data[j] = p
+                        break
+
+
+def get_standardized_data(data_set, num_of_bins):
+    data = read_file(data_set)
+    normalize_data(data)
+    discretize_data(data, num_of_bins)
+
+    get_columns(data)
+
+    return data
+
+
+def run_algorithm(data_set=1, split_value=0.85, num_of_bins=5):
+    """
+
+    :param data_set: The input data file
+    :param split_value: The percentage of data to use as training data and testing data
+    :param num_of_bins: The number of partitions to make of the data while discretizing
+    :return: None
+    """
+
+    assert num_of_bins > 1, "Number of Bins should be greater than 1"
+    assert split_value > 0.5, "Testing data cannot be larger than training data"
+    assert data_set in [1, 2, 4], "No such data-set exists"
+
+    data = get_standardized_data(data_set, num_of_bins)
+
     training_data, testing_data = split_data(data, split_value=split_value)
 
-    root = build_tree(input_data=training_data,
-                      attributes=attributes,
-                      split_on=split_on)
+    root = build_tree(training_data, range(len(columns)))
+    tp, fn, fp, tn = classify_testing_data(root=root, input_data=testing_data)
 
-    a, b, c, d = classify_testing_data(root=copy.deepcopy(root), input_data=testing_data, attributes=attributes)
-
-    calculate_statistics(a, b, c, d)
+    calculate_statistics(tp, fn, fp, tn)
 
 
-run_algorithm(data_set=1,
-              normalization=False,
-              shuffle=False,
-              split_value=0.80,
-              split_on=SplitAlgo.CLERROR)
+if __name__ == '__main__':
+    run_algorithm(data_set=4,
+                  split_value=0.80,
+                  num_of_bins=5)

@@ -1,38 +1,20 @@
-from statistics import mean, median
-
-
 class TreeNode:
     def __init__(self):
-        self.left = None
-        self.count = None
-        self.right = None
-        self.label = None
-        self.index = None  # Index of the attribute being split on.
-        self.choice = None
+        self.label = None  # If a node has a label, it is a leaf node.
+        self.branches = []
+        self.attribute_index = None
+        self.attribute_value = None
+
+    def add_child(self, obj):
+        self.branches.append(obj)
 
 
 class DataRow:
     def __init__(self, truth, data):
-        self.truth = truth
-        self.data = data
-        self.prediction = None
+        self.truth = truth  # The truth value for that sample
+        self.data = data  # The sample data itself
 
 
-class DataColumn:
+class Column:
     def __init__(self, data):
-        try:
-            self.mean = mean(data)
-            self.median = median(data)
-            self.type = 'Continuous'
-            self.choices = None
-        except TypeError:
-            self.mean = None
-            self.median = None
-            self.type = 'Nominal'
-            self.choices = list(set(data))
-
-
-class SplitAlgo:
-    GINI = 'GINI'
-    CLERROR = 'Classification Error'
-    ENTROPY = 'Entropy & Information Gain'
+        self.choices = list(set(data))
