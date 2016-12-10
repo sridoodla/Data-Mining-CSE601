@@ -31,6 +31,6 @@ def run_k_folds(data_set=1, number_of_bins=5, num_of_folds=10):
 
 
 if __name__ == '__main__':
-    run_k_folds(data_set=1,
+    run_k_folds(data_set=2,
                 number_of_bins=5,
                 num_of_folds=10)
